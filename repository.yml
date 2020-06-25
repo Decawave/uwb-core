@@ -1,0 +1,61 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+repo.name: decawave-uwb-core
+repo.versions:
+    "0.0.0": "master"
+    "0.1.0": "uwb_core_0_1_0_tag"
+
+    "0-latest": "0.1.0"
+    "0-dev": "0.0.0"       # master
+
+repo.newt_compatibility:
+    # Allow all versions for 0.0.0.  This is a workaround to prevent a warning
+    # from being displayed when newt doesn't know which version of the repo is
+    # present.
+    0.0.0:
+        0.0.0: good
+    0.1.0:
+        1.7.0: good
+
+repo.deps:
+    apache-mynewt-core:
+        type: github
+        user: apache
+        repo: mynewt-core
+        vers:
+            master: 1.7.0
+            uwb_core_0_1_0_tag: 1.7.0
+
+    decawave-uwb-dw1000:
+        type: git
+        user: decawave
+        repo: uwb-dw1000
+        url: 'git@github.com:Decawave/uwb-dw1000.git'
+        vers:
+            master: 0-dev
+            uwb_core_0_1_0_tag: 0.9.0
+
+    mynewt-timescale-lib:
+        type: github
+        user: decawave
+        repo: mynewt-timescale-lib
+        vers:
+            master: 0-dev
+            uwb_core_0_1_0_tag: 1.0.1

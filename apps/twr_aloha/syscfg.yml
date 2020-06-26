@@ -1,0 +1,52 @@
+syscfg.vals:
+    # Route console to RTT
+    CONSOLE_UART_BAUD: 1000000
+    CONSOLE_UART_TX_BUF_SIZE: 1024
+    CONSOLE_HISTORY_SIZE: 32
+
+    LOG_LEVEL: 0
+    LOG_SOFT_RESET: 0
+
+    UWB_DEVICE_0: 1
+    FS_XTALT_AUTOTUNE_ENABLED: 0
+    HARDFLOAT: 1
+    FLOAT_USER: 1
+    RNG_VERBOSE: 2
+    WCS_VERBOSE: 1
+    STATS_NAMES: 1
+    STATS_CLI: 1
+    CONFIG_CLI: 1
+    UWB_CLI: 1
+    UWB_CLI_BACKTRACE: 1
+    IMGMGR_CLI: 0
+    SHELL_TASK: 1
+    SHELL_NEWTMGR: 0
+    NRNG_ENABLED: 0
+    TWR_SS_NRNG_ENABLED: 0
+    SURVEY_ENABLED: 0
+    # Enable newtmgr commands.
+    STATS_NEWTMGR: 1
+    LOG_NEWTMGR: 1
+
+    UWB_PAN_VERSION_ENABLED: 0
+    DW3000_PKG_INIT_LOG: 1
+    DW3000_RXTX_GPIO: 1
+
+    UWBCFG_DEF_TX_PREAM_LEN: '"64"'
+    UWBCFG_DEF_RX_CIPHER_MODE: '"1sdc"'
+    UWBCFG_DEF_RX_CIPHER_LEN: '"256"'
+    UWBCFG_DEF_RX_PDOA_MODE: '"3"'
+    UWBCFG_DEF_TXRF_POWER_COARSE: '"3"'
+    UWBCFG_DEF_TXRF_POWER_FINE: '"63"'
+    UWBCFG_DEF_TXRF_VCM_LO: '"15"'
+    UWBCFG_DEF_FRAME_FILTER: '"0xF"'
+    UWBCFG_DEF_ROLE: '"0x4"'
+
+# No point in having the CIR enabled unless we can use it for pdoa
+syscfg.vals.'!UWB_DEVICE_1 && !DW3000_DEVICE_0':
+    CIR_ENABLED: 0
+
+syscfg.defs:
+    ANCHOR_ADDRESS:
+        description: 'Address of anchor'
+        value: 0x1234

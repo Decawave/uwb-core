@@ -1,0 +1,12 @@
+
+syscfg.defs:
+      TWR_SS_ACK_ENABLED:
+        description: 'Enable ranging services'
+        value: 1
+        restrictions: UWB_RNG_ENABLED
+      TWR_SS_ACK_TX_HOLDOFF:
+        description: 'tx holdoff delay used to know how long to wait for SS TWR ACK message (usec)'
+        value: ((uint32_t)0x800)
+      TWR_SS_ACK_RX_TIMEOUT:
+        description: 'TOA timeout delay for SS TWR (usec)'
+        value: ((uint16_t)0x100)

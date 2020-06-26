@@ -1,0 +1,84 @@
+// Device Tree overlay for uwbhal on Raspberry Pi
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+    /* disable spi-dev for spi0.0 & spi0.1 */
+    fragment@0 {
+        target = <&spi0>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+    fragment@1 {
+        target = <&spidev0>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+
+    fragment@2 {
+        target = <&spidev1>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+
+    fragment@3 {
+        target = <&gpio>;
+        __overlay__ {
+        spi0_pins: spi0_pins {
+                brcm,pins = <9 10 11>;
+                brcm,function = <0x4 0x4 0x4>;
+            };
+        spi0_cs_pins: spi0_cs_pins {
+                brcm,pins = <8 7>;
+                brcm,function = <0x1 0x1>;
+            };
+        uwb_rst_pins: uwb_rst_pins {
+                brcm,pins = <25 6>; /* RST0, RST1 */
+                brcm,function = <0x0 0x0>;
+                brcm,pull = <0 0>; /* Disable all pull-up/down */
+            };
+        uwb_irq_pins: uwb_irq_pins {
+                brcm,pins = <24 23>; /* RST0, RST1 */
+                brcm,function = <0x0 0x0>;
+                brcm,pull = <0 0>; /* Disable all pull-up/down */
+            };
+        };
+    };
+
+    fragment@4 {
+        target = <&spi0>;
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi0_pins &spi0_cs_pins &uwb_rst_pins &uwb_irq_pins>;
+
+            uwbhal@0 {
+                compatible = "decawave,uwbhal";
+                reg = <0>; /* CE0 */
+                spi-max-frequency = <40000000>;
+                uwbhal,irq-gpio = <&gpio 24 0 0>;
+                uwbhal,reset-gpio = <&gpio 6 0x4>; /* OPEN_DRAIN */
+                /* uwbhal,reset-gpio = <&gpio 6 0x0>; If ther's a buffer on rst use this instead of line above */
+                uwbhal,sync-gpio = <&gpio 5 0>;
+                status = "okay";
+            };
+
+            uwbhal@1 {
+                compatible = "decawave,uwbhal";
+                reg = <1>; /* CE1 */
+                spi-max-frequency = <40000000>;
+                uwbhal,irq-gpio = <&gpio 23 0 0>;
+                uwbhal,reset-gpio = <&gpio 25 0x4>; /* OPEN_DRAIN */
+                /* uwbhal,reset-gpio = <&gpio 25 0x0>; If ther's a buffer on rst use this instead of line above */
+                status = "okay";
+            };
+        };
+    };
+};

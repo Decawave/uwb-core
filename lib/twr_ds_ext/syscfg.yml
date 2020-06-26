@@ -1,0 +1,12 @@
+
+syscfg.defs:
+      TWR_DS_EXT_ENABLED:
+        description: 'Enable double sided extended two way ranging'
+        value: 1
+        restrictions: UWB_RNG_ENABLED
+      TWR_DS_EXT_TX_HOLDOFF:
+        description: 'tx holdoff delay for DS TWR extended frame (usec)'
+        value: ((uint32_t)0x0400)
+      TWR_DS_EXT_RX_TIMEOUT:
+        description: 'TOA timeout delay for DS TWR extended frame (usec)'
+        value: ((uint16_t)0x40)

@@ -1,0 +1,24 @@
+/**
+ * @defgroup api_dw1000 DW1000
+ * @brief All project modules
+ *
+ * @{
+ */
+/** @} */
+
+/**
+ * @defgroup api_dw3000 DW3000
+ * @brief All project modules
+ *
+ * @{
+ */
+/** @} */
+
+/**
+ * @defgroup api_services Services */
+ * @brief All project modules
+ *
+ * @{
+ */
+/** @} */
+

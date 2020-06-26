@@ -1,0 +1,20 @@
+
+syscfg.defs:
+      UWB_RNG_ENABLED:
+        description: 'Enable toplevel UWB ranging services'
+        value: 1
+      RNG_TX_HOLDOFF:
+        description: 'worstcase tx holdoff delay for all TWR modes (usec)'
+        value: ((uint32_t)0x0320)
+      RNG_RX_TIMEOUT:
+        description: 'TOA timeout delay for TWR (usec)'
+        value: ((uint16_t)0x20)
+      RNG_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+      RNG_STATS:
+        description: 'Enable statistics for the rng module'
+        value: 1
+      UWB_RNG_JSON_BUFSIZE:
+        description: 'JSON buffer size'
+        value: 256

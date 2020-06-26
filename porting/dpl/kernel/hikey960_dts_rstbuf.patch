@@ -1,0 +1,87 @@
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index f72ba6c..a81c113 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -32,6 +32,7 @@
+ 		serial4 = &uart4;
+ 		serial5 = &uart5;
+ 		serial6 = &uart6;
++		spi2 = &spi2;
+ 	};
+ 
+ 	chosen {
+@@ -50,6 +51,7 @@
+ 				};
+ 			};
+ 		};
++#if 0
+ 		hardware_cfg_neonkey {
+ 			overlay_0 {
+ 				fragment@0 {
+@@ -70,6 +72,7 @@
+ 				};
+ 			};
+ 		};
++#endif
+ 		hardware_cfg_disable_bt {
+ 			overlay_0 {
+ 				fragment@0 {
+@@ -385,6 +385,8 @@
+ 	/* On Low speed expansion */
+ 	label = "LS-SPI0";
+ 	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi2_pmx_func &uwbrst_cfg_func>;
+ 
+ 	spidev@0 {
+ 		compatible = "rohm,dh2228fv";
+@@ -393,6 +395,17 @@
+ 		status = "disabled";
+ 	};
+ 
++	uwbhal@0 {
++		compatible = "decawave,uwbhal";
++		reg = <0>;
++		spi-max-frequency = <20000000>;
++		uwbhal,irq-gpio = <&gpio26 0 0 0>;
++		uwbhal,irqack-gpio = <&gpio26 1 0>;
++		uwbhal,reset-gpio = <&gpio26 2 0>;
++		uwbhal_1p8-supply = <&ldo11>;
++		status = "okay";
++	};
++
+ 	sensorhub@0 {
+ 		compatible = "nanohub";
+ 		reg = <0>;
+diff --git a/arch/arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi b/arch/arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi
+index d11efc8..840c488 100644
+--- a/arch/arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi
+@@ -989,6 +989,27 @@
+ 				>;
+ 			};
+ 
++			uwbrst_cfg_func: uwbrst_cfg_func {
++				pinctrl-single,pins = <
++					0x088 0 /* GPIO_210, Disable any bias pull up/down */
++				>;
++				pinctrl-single,bias-pulldown = <
++					PULL_DIS
++					PULL_DOWN
++					PULL_DIS
++					PULL_DOWN
++				>;
++				pinctrl-single,bias-pullup = <
++					PULL_DIS
++					PULL_UP
++					PULL_DIS
++					PULL_UP
++				>;
++				pinctrl-single,drive-strength = <
++					DRIVE7_02MA DRIVE6_MASK
++				>;
++			};
++
+ 			pcie_cfg_func: pcie_cfg_func {
+ 				pinctrl-single,pins = <
+ 					0x094 0x0 /* PCIE_CLKREQ_N */

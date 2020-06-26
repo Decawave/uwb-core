@@ -1,0 +1,64 @@
+diff --git a/hw/mcu/stm/stm32f7xx/include/mcu/cmsis_nvic.h b/hw/mcu/stm/stm32f7xx/include/mcu/cmsis_nvic.h
+index a9dea74..7042d42 100644
+--- a/hw/mcu/stm/stm32f7xx/include/mcu/cmsis_nvic.h
++++ b/hw/mcu/stm/stm32f7xx/include/mcu/cmsis_nvic.h
+@@ -11,6 +11,8 @@
+ 
+ #if defined(STM32F746xx)
+  #define MCU_NUM_PERIPH_VECTORS 98
++#elif defined(STM32F756xx)
++ #define MCU_NUM_PERIPH_VECTORS 98
+ #elif defined(STM32F767xx)
+  #define MCU_NUM_PERIPH_VECTORS 110
+ #else
+diff --git a/hw/mcu/stm/stm32f7xx/syscfg.yml b/hw/mcu/stm/stm32f7xx/syscfg.yml
+index e705446..d04a4fb 100644
+--- a/hw/mcu/stm/stm32f7xx/syscfg.yml
++++ b/hw/mcu/stm/stm32f7xx/syscfg.yml
+@@ -61,6 +61,46 @@ syscfg.defs:
+         value:  0
+         restrictions:
+             - "!SPI_0_MASTER"
++    SPI_1_MASTER:
++        description: 'SPI 1 master'
++        value:  0
++        restrictions:
++            - "!SPI_1_SLAVE"
++    SPI_1_SLAVE:
++        description: 'SPI 1 slave'
++        value:  0
++        restrictions:
++            - "!SPI_1_MASTER"
++    SPI_2_MASTER:
++        description: 'SPI 2 master'
++        value:  0
++        restrictions:
++            - "!SPI_2_SLAVE"
++    SPI_2_SLAVE:
++        description: 'SPI 2 slave'
++        value:  0
++        restrictions:
++            - "!SPI_2_MASTER"
++    SPI_3_MASTER:
++        description: 'SPI 3 master'
++        value:  0
++        restrictions:
++            - "!SPI_3_SLAVE"
++    SPI_3_SLAVE:
++        description: 'SPI 3 slave'
++        value:  0
++        restrictions:
++            - "!SPI_3_MASTER"
++    SPI_4_MASTER:
++        description: 'SPI 4 master'
++        value:  0
++        restrictions:
++            - "!SPI_4_SLAVE"
++    SPI_4_SLAVE:
++        description: 'SPI 4 slave'
++        value:  0
++        restrictions:
++            - "!SPI_4_MASTER"
+     I2C_0:
+         description: 'I2C (TWI) interface 0'
+         value:  0

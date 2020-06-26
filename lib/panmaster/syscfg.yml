@@ -1,0 +1,78 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+syscfg.defs:
+    PANMASTER_MAXNUM_NODES:
+        description: 'Max number of nodes to support'
+        value: 128
+        restrictions:
+          - 'UWB_PAN_ENABLED'
+    PANMASTER_SORT_AT_INIT:
+        description: 'Sort database at startup'
+        value: 1
+    PANMASTER_DEFAULT_PANID:
+        description: 'Default base mask for string_id / addr'
+        value: '"0x0100"'
+    PANMASTER_DEFAULT_LEASE_TIME:
+        description: 'Default lease time for a slot/short address'
+        value: '30'
+    PANMASTER_NFFS:
+        description: 'Panmaster storage is in NFFS'
+        value: 0
+        restrictions:
+            - '!PANMASTER_FCB'
+    PANMASTER_FCB:
+        description: 'Panmaster default storage is in FCB'
+        value: 1
+        restrictions:
+            - '!PANMASTER_NFFS'
+            - 'PANMASTER_FCB_FLASH_AREA'
+    PANMASTER_CBOR_EXPORT:
+        description: 'Functions for exporting list of nodes as cbor data'
+        value: 0
+    PANMASTER_CLI:
+        description: 'CLI commands to interact with panmaster'
+        value: 0
+        restrictions:
+            - SHELL_TASK
+
+syscfg.defs.PANMASTER_NFFS:
+    PANMASTER_NFFS_DIR:
+        description: 'Directory where node data is stored'
+        value: '"/pm"'
+    PANMASTER_NFFS_FILE:
+        description: 'Name for the default config file'
+        value: '"/pm/nds"'
+    PANMASTER_NFFS_MAX_LINES:
+        description: 'Limit how many items stored in file before compressing'
+        value: 64
+
+syscfg.defs.PANMASTER_FCB:
+    PANMASTER_FCB_FLASH_AREA:
+        description: 'BSP flash area for panmaster nodes'
+        type: 'flash_owner'
+        value:
+    PANMASTER_FCB_MAGIC:
+        description: 'Magic to identify valid panmaster area'
+        value: 0xbaff0044
+    PANMASTER_FCB_NUM_AREAS:
+        description: >
+            Number of areas to allocate in the FCB.  A smaller number is
+            used if the flash hardware cannot support this value.
+        value: 16

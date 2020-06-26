@@ -1,0 +1,45 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+pkg.name: hw/bsp/hikey960_dwmX000
+pkg.type: bsp
+pkg.description: "DWM3020 on a hikey960"
+pkg.author: "UWB Core <uwbcore@gmail.com>"
+pkg.homepage: "http://www.decawave.com/"
+pkg.keywords:
+    - dw1000
+    - dw3000
+
+pkg.deps:
+    - "@apache-mynewt-core/hw/mcu/native"
+    - "@apache-mynewt-core/kernel/sim/"
+    - "@apache-mynewt-core/sys/config"
+    - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
+
+pkg.deps.DW1000_DEVICE_0:
+    - '@decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000'
+pkg.deps.DW3000_DEVICE_0:
+    - '@decawave-uwb-dw3000/hw/drivers/uwb/uwb_dw3000'
+
+pkg.deps.CIR_ENABLED:
+    - '@decawave-uwb-dw1000/lib/cir/cir_dw1000'
+    - '@decawave-uwb-dw3100-c0/lib/cir/cir_dw3100-c0'
+
+pkg.cflags:
+  - '-Wno-format'

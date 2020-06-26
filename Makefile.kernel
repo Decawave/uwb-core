@@ -1,0 +1,20 @@
+# kbuild part of makefile
+KERNEL_SRC ?= /lib/modules/$(shell uname -r)/build
+M ?= $(shell pwd)
+
+KBUILD_OPTIONS += CONFIG_UWB_DW1000=y
+KBUILD_OPTIONS += CONFIG_UWB_DW3000=y
+KBUILD_OPTIONS += CONFIG_UWB_CORE=m
+KBUILD_OPTIONS += CONFIG_UWB_HAL=m
+KBUILD_OPTIONS += CONFIG_UWB_LISTENER=m
+KBUILD_OPTIONS += CONFIG_UWB_WIRE_LISTENER=m
+KBUILD_OPTIONS += CONFIG_UWB_TP_TEST=m
+KBUILD_OPTIONS += CONFIG_UWB_TDOA_SYNC_TAG=m
+KBUILD_OPTIONS += CONFIG_UWB_DESENSE=m
+
+modules modules_install clean:
+# $(ARCH)
+# make -C build_$(ARCH)
+	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_SRC) M=$(M) $(KBUILD_OPTIONS) $(@)
+	@echo "\nKernel module(s) generated:"
+	@find . -name "*.ko"

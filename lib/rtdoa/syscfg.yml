@@ -1,0 +1,31 @@
+
+syscfg.defs:
+      RTDOA_ENABLED:
+        description: 'Enable toplevel rtdoa services'
+        value: 1
+      RTDOA_TX_HOLDOFF:
+        description: 'tx holdoff delay for RTDoA (usec)'
+        value: ((uint32_t)0x300)
+      RTDOA_RX_TIMEOUT:
+        description: 'TOA timeout delay for TWR (usec)'
+        value: ((uint16_t)0x10)
+      RTDOA_TX_GUARD_DELAY:
+        description: 'Time between packages, 0x90 minimum?'
+        value: ((uint16_t)0x190)
+      RTDOA_NNODES:
+        description: 'Number of node response slots'
+        value: 16
+      RTDOA_NFRAMES:
+        description: 'Number of frames in memory. Should me more than NNODES+1'
+        value: 18
+      RTDOA_MAX_CASCADE_RPTS:
+        description: >
+            Max number of cascade levels allowed in repeating rtdoa request packet.
+            Set to 0 to disable cascading. Relates to tx_holdoff_dly and tdma slot size.
+        value: 0
+      RTDOA_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+      RTDOA_STATS:
+        description: 'Enable statistics for the rtdoa module'
+        value: 1

@@ -1,0 +1,4 @@
+syscfg.defs:
+    LIS2MDL_USE_SPI:
+        description: 'Use 4wire SPI interface instead of i2c'
+        value: 0

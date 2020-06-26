@@ -1,0 +1,6 @@
+
+syscfg.defs:
+      RTDOA_NODE_ENABLED:
+        description: 'Enable RTDOA node services'
+        value: 1
+        restrictions: RTDOA_ENABLED

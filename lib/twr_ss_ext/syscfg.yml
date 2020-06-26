@@ -1,0 +1,12 @@
+
+syscfg.defs:
+      TWR_SS_EXT_ENABLED:
+        description: 'Enable Single Sided extended ranging services'
+        value: 1
+        restrictions: UWB_RNG_ENABLED
+      TWR_SS_EXT_TX_HOLDOFF:
+        description: 'tx holdoff delay for SS EXT TWR (usec)'
+        value: ((uint32_t)0x0400)
+      TWR_SS_EXT_RX_TIMEOUT:
+        description: 'TOA timeout delay for SS EXT TWR (usec)'
+        value: ((uint16_t)0x40)

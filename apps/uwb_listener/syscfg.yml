@@ -1,0 +1,5 @@
+
+syscfg.defs:
+      UWB_LISTENER_VERBOSE:
+        description: 'Default verbose level'
+        value: 0

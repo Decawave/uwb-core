@@ -1,0 +1,25 @@
+From a1f9bd38966c2b43c19e3b383b7714bd6cb3bee9 Mon Sep 17 00:00:00 2001
+From: Niklas Casaril <niklas@casaril.com>
+Date: Fri, 8 Nov 2019 13:36:46 +1000
+Subject: [PATCH 1/1] Changed to use MCU_TARGET
+
+---
+ hw/mcu/nordic/nrf52xxx/src/hal_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hw/mcu/nordic/nrf52xxx/src/hal_spi.c b/hw/mcu/nordic/nrf52xxx/src/hal_spi.c
+index 374209a..2007c4c 100644
+--- a/hw/mcu/nordic/nrf52xxx/src/hal_spi.c
++++ b/hw/mcu/nordic/nrf52xxx/src/hal_spi.c
+@@ -1103,7 +1103,7 @@ hal_spi_txrx_noblock(int spi_num, void *txbuf, void *rxbuf, int len)
+         goto err;
+     }
+ 
+-#if MYNEWT_VAL(MCU_NRF52832)
++#if MYNEWT_VAL_CHOICE(MCU_TARGET,nRF52832)
+     /* There is a known issue in nRF52832 with sending 1 byte in SPIM mode that
+      * it clocks out additional byte. For this reason, let us use SPI mode
+      * for such a write
+-- 
+2.7.4
+

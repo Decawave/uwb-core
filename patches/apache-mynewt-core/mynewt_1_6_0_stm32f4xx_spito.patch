@@ -1,0 +1,66 @@
+diff --git a/hw/mcu/stm/stm32f4xx/src/ext/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c b/hw/mcu/stm/stm32f4xx/src/ext/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
+index 9d5fa62..93ce3ae 100644
+--- a/hw/mcu/stm/stm32f4xx/src/ext/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
++++ b/hw/mcu/stm/stm32f4xx/src/ext/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
+@@ -546,6 +546,7 @@ HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, uint8_t *pData, uint
+     }
+     while (hspi->TxXferCount > 0U)
+     {
++#if MYNEWT_VAL(SPI_STM32_USE_TO_API)
+       /* Wait until TXE flag is set to send data */
+       if(__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE))
+       {
+@@ -562,6 +563,12 @@ HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, uint8_t *pData, uint
+           goto error;
+         }
+       }
++#else
++      while(!__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE));
++      *((__IO uint8_t*)&hspi->Instance->DR) = (*pData);
++      pData += sizeof(uint8_t);
++      hspi->TxXferCount--;
++#endif
+     }
+   }
+ 
+@@ -929,6 +936,7 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive(SPI_HandleTypeDef *hspi, uint8_t *pTxD
+   /* Transmit and Receive data in 8 Bit mode */
+   else
+   {
++#if MYNEWT_VAL(SPI_STM32_USE_TO_API)
+     if((hspi->Init.Mode == SPI_MODE_SLAVE) || (hspi->TxXferCount == 0x01U))
+     {
+       *((__IO uint8_t*)&hspi->Instance->DR) = (*pTxData);
+@@ -968,6 +976,17 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive(SPI_HandleTypeDef *hspi, uint8_t *pTxD
+         goto error;
+       }
+     }
++#else
++    while((hspi->TxXferCount-- > 0U)) {
++        /* check TXE flag */
++        while(!__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE));
++        *(__IO uint8_t *)&hspi->Instance->DR = (*pTxData++);
++
++        /* Wait until RXNE flag is reset */
++        while(!__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE));
++        (*(uint8_t *)pRxData++) = hspi->Instance->DR;
++    }
++#endif
+   }
+ 
+ #if (USE_SPI_CRC != 0U)
+diff --git a/hw/mcu/stm/stm32f4xx/syscfg.yml b/hw/mcu/stm/stm32f4xx/syscfg.yml
+index 7c48f8f..e63e0d0 100644
+--- a/hw/mcu/stm/stm32f4xx/syscfg.yml
++++ b/hw/mcu/stm/stm32f4xx/syscfg.yml
+@@ -62,6 +62,10 @@ syscfg.defs:
+         restrictions:
+             - "!SPI_0_MASTER"
+ 
++    SPI_STM32_USE_TO_API:
++        description: 'Enable the timeout api in the hal_spi_transmit and transmitreceive functions'
++        value:  0
++
+     TRNG:
+         description: 'True Random Number Generator (RNG)'
+         value: 0

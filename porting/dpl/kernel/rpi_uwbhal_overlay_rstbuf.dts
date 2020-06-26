@@ -1,0 +1,81 @@
+// Device Tree overlay for uwbhal on Raspberry Pi
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+    /* disable spi-dev for spi0.0 & spi0.1 */
+    fragment@0 {
+        target = <&spi0>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+    fragment@1 {
+        target = <&spidev0>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+
+    fragment@2 {
+        target = <&spidev1>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+
+    fragment@3 {
+        target = <&gpio>;
+        __overlay__ {
+        spi0_pins: spi0_pins {
+                brcm,pins = <9 10 11>;
+                brcm,function = <0x4 0x4 0x4>;
+            };
+        spi0_cs_pins: spi0_cs_pins {
+                brcm,pins = <8>; /* 7 = CS1 */
+                brcm,function = <0x1>;
+            };
+        uwb_rst_pin: uwb_rst_pin {
+                brcm,pins = <23 24 25>; /* IRQ1, IRQ0, RST */
+                brcm,function = <0x0 0x0 0x0>;
+                brcm,pull = <0 0 0>; /* Disable all pull-up/down */
+            };
+        };
+    };
+
+    fragment@4 {
+        target = <&spi0>;
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi0_pins &spi0_cs_pins &uwb_rst_pin>;
+
+            uwbhal@0 {
+                compatible = "decawave,uwbhal";
+                reg = <0>; /* CE0 */
+                spi-max-frequency = <40000000>;
+                uwbhal,irq-gpio = <&gpio 24 0 0>;
+                uwbhal,irqack-gpio = <&gpio 12 0>;
+                uwbhal,reset-gpio = <&gpio 25 0x0>; /* Buffer on rst out */
+                uwbhal,cs1 = <&gpio 7 0 0>;
+                /* uwbhal_1p8-supply = <&ldo11>; */
+                status = "okay";
+            };
+/*
+            uwbhal@1 {
+                compatible = "decawave,uwbhal";
+                reg = <1>;
+                spi-max-frequency = <40000000>;
+                uwbhal,irq-gpio = <&gpio 23 0 0>;
+                uwbhal,irqack-gpio = <&gpio 12 0>;
+                uwbhal,reset-gpio = <&gpio 25 0x4>;
+                status = "okay";
+            };
+*/
+        };
+    };
+};

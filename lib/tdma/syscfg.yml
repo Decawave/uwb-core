@@ -1,0 +1,22 @@
+
+syscfg.defs:
+
+    TDMA_ENABLED:
+        description: 'Enable TDMA Services'
+        value: 1
+        restrictions: OS_LATENCY
+    TDMA_NSLOTS:
+        description: 'Enable TDMA Services'
+        value: 128
+    TDMA_SANITY_INTERVAL:
+        description: 'Sanity watchdog timeout (seconds)'
+        value: 0
+    TDMA_STATS:
+        description: 'Enable statistics for the tdma module'
+        value: 1
+    TDMA_MAX_SLOT_DELAY_US:
+        description: 'Drop slots if they will start later than this many us late'
+        value: 500
+    TDMA_TASK_STACK_SZ:
+        description: 'Size of tdma task stack'
+        value: 256

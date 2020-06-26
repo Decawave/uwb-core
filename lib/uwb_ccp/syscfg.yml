@@ -1,0 +1,52 @@
+
+syscfg.defs:
+    UWB_CCP_ENABLED:
+        description: >
+            'Enable clock calibration'
+        value: 1
+        restrictions: UWB_CCP_PERIOD
+        restrictions: XTALT_GUARD
+    UWB_CCP_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+    UWB_CCP_VALID_THRESHOLD:
+        description: 'Consider CCP valid once this many packets have been received (>=1)'
+        value: 2
+    UWB_CCP_PERIOD:
+        description: >
+            Clock Calibration Packets Period (dwt usec). Should be a multiple of 0x10000
+            or else cascading will not work properly.
+        value: ((uint32_t)0x100000)
+    UWB_CCP_LONG_RX_TO:
+        description: 'Long timeout used when not synced with a master (us)'
+        value: ((uint32_t)0xffff)
+    XTALT_GUARD:
+        description: >
+            Guardband for xtal drift (dwt units)
+        value: ((uint32_t)0x100)
+    UWB_CCP_MAX_CASCADE_RPTS:
+        description: >
+            Max number of cascade levels allowed in repeating CCP packet.
+            Set to 0 to disable cascading. Relates to tx_holdoff_dly and tdma slot size.
+        value: 4
+    UWB_CCP_TEST_CASCADE_RPTS:
+        description: 'Test receiving only cascaded repeats above this level'
+        value: 0
+    UWB_CCP_RPT_HOLDOFF_DLY:
+        description: >
+            Holdoff dly when repeating CCP packet.
+        value: ((uint16_t)0x380)
+    UWB_CCP_STATS:
+        description: 'Enable statistics for the CCP module'
+        value: 1
+    UWB_CCP_TASK_STACK_SZ:
+        description: 'Size of interrupt task stack'
+        value: 128
+    UWB_CCP_TOLERATE_MISSED_FRAMES:
+        description: >
+          The number of missed ccp frames we can tolerate before
+          stopping tdma.
+        value: 0
+    UWB_CCP_JSON_BUFSIZE:
+        description: 'JSON buffer size'
+        value: 128

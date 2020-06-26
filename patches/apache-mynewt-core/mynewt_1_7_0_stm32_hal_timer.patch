@@ -1,0 +1,13 @@
+diff --git a/hw/mcu/stm/stm32_common/src/hal_timer.c b/hw/mcu/stm/stm32_common/src/hal_timer.c
+index caa443b..14dbfb2 100644
+--- a/hw/mcu/stm/stm32_common/src/hal_timer.c
++++ b/hw/mcu/stm/stm32_common/src/hal_timer.c
+@@ -509,7 +509,7 @@ hal_timer_config(int num, uint32_t freq_hz)
+ 
+     memset(&init, 0, sizeof(init));
+     init.Period = 0xffff;
+-    init.Prescaler = prescaler;
++    init.Prescaler = prescaler - 1;
+     init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+     init.CounterMode = TIM_COUNTERMODE_UP;
+ 

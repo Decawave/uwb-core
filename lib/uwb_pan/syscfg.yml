@@ -1,0 +1,28 @@
+syscfg.defs:
+    UWB_PAN_ENABLED:
+        description: 'Private Area Network functionality'
+        value: 1
+    UWB_PAN_VERBOSE:
+        description: 'Print verbose messages'
+        value: 0
+    UWB_PAN_TX_HOLDOFF:
+        description: 'tx holdoff delay for PAN (usec)'
+        value: ((uint32_t)0x0300)
+    UWB_PAN_RX_TIMEOUT:
+        description: 'TOA timeout delay for PAN (usec)'
+        value: ((uint16_t)0x0600)
+    UWB_PAN_LEASE_TIME:
+        description: 'PAN address requested lease time (s)'
+        value: ((uint16_t)300)
+    UWB_PAN_NETWORK_ROLE:
+        description: 'PAN Network role (0=invalid, 1=Anchor, 2=Tag)'
+        value: ((uint16_t)300)
+    UWB_PAN_LEASE_EXP_MARGIN:
+        description: 'Start requesting a new pan address when less than this many ms left of lease'
+        value: (500)
+    UWB_PAN_RPT_MAX:
+        description: 'Max number of relay-repeats to allow (<=15), set to 0 to disable'
+        value: (2)
+    UWB_PAN_VERSION_ENABLED:
+        description: 'Enable Library version number'
+        value: 1

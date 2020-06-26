@@ -1,0 +1,101 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+syscfg.defs:
+    STM32_FLASH_SIZE_KB:
+        description: 'Total flash size in KB.'
+        value: 2048
+
+    STM32_FLASH_NUM_AREAS:
+        description: 'Number of flash sectors for a non-linear STM32 MCU.'
+        value: 24
+
+    UART_0:
+        description: 'UART 0'
+        value:  1
+    TIMER_0:
+        description: 'Timer 0'
+        value:  1
+    TIMER_1:
+        description: 'Timer 1'
+        value: 0
+    TIMER_2:
+        description: 'Timer 2'
+        value: 0
+
+    ETH_0:
+        description: 'Ethernet driver for LwIP'
+        value: 0
+    ETH_0_MAC:
+        description: 'Mac address to use for ETH_0'
+        value: '(uint8_t[6]){ 0, 0xd, 0xe, 0xc, 0xa, 1 }'
+    DW3000_DEVICE_0:
+        description: '1st DW3000 Device Enable'
+        value:  0
+    DW3000_DEVICE_0_SPI_IDX:
+        description: 'Using SPI0'
+        value:  0
+    DW3000_DEVICE_0_SS:
+        description: 'Slave Select Pin, DW_CS_A'
+        value:  'MCU_GPIO_PORTD(14)'
+    DW3000_DEVICE_0_RST:
+        description: 'Reset Pin, DW_RST_A'
+        value:  'MCU_GPIO_PORTF(13)'
+    DW3000_DEVICE_0_IRQ:
+        description: 'Interrupt Request Pin, DW_IRQ_A'
+        value:  'MCU_GPIO_PORTF(12)'
+    DW3000_DEVICE_BAUDRATE:
+        description: 'DW3000 can use fast spi baudrate from idle'
+        value: 42000
+    DW3000_DEVICE_0_TX_ANT_DLY:
+        description: 'TX_ANT_DLY'
+        value: 0x4015
+    DW3000_DEVICE_0_RX_ANT_DLY:
+        description: 'RX_ANT_DLY'
+        value: 0x4015
+
+syscfg.vals:
+    REBOOT_LOG_FLASH_AREA: FLASH_AREA_REBOOT_LOG
+    CONFIG_FCB_FLASH_AREA: FLASH_AREA_NFFS
+    NFFS_FLASH_AREA: FLASH_AREA_NFFS
+    COREDUMP_FLASH_AREA: FLASH_AREA_IMAGE_1
+    OS_CPUTIME_TIMER_NUM: 0
+    STM32_CLOCK_VOLTAGESCALING_CONFIG: 'PWR_REGULATOR_VOLTAGE_SCALE1'
+    STM32_CLOCK_HSE: 1
+    STM32_CLOCK_HSE_BYPASS: 1
+    STM32_CLOCK_PLL_PLLM: 8
+    STM32_CLOCK_PLL_PLLN: 360
+    STM32_CLOCK_PLL_PLLP: 2
+    STM32_CLOCK_PLL_PLLQ: 7
+    STM32_CLOCK_ENABLE_OVERDRIVE: 1
+    STM32_CLOCK_AHB_DIVIDER: 'RCC_SYSCLK_DIV1'
+    STM32_CLOCK_APB1_DIVIDER: 'RCC_HCLK_DIV4'
+    STM32_CLOCK_APB2_DIVIDER: 'RCC_HCLK_DIV2'
+    STM32_FLASH_LATENCY: 'FLASH_LATENCY_5'
+    STM32_FLASH_PREFETCH_ENABLE: 1
+    STM32_INSTRUCTION_CACHE_ENABLE: 1
+    STM32_DATA_CACHE_ENABLE: 1
+
+syscfg.vals.DW3000_DEVICE_0:
+    SPI_0_MASTER: 1
+    DW3000_HAL_SPI_MAX_CNT: 65535
+
+syscfg.vals.UWB_DEVICE_0:
+    DW3000_DEVICE_0: 1
+    UWB_DEV_RXDIAG_MAXLEN: 256

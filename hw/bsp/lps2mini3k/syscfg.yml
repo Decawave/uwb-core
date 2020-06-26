@@ -1,0 +1,93 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Package: hw/bsp/lps2mini3k
+
+syscfg.defs:
+    BSP_NRF52:
+        description: 'Set to indicate that BSP has NRF52'
+        value: 1
+
+    DW3000_DEVICE_0:
+        description: 'DW3000 Device Enable'
+        value:  0
+    DW3000_DEVICE_0_SPI_IDX:
+        description: 'Using SPI0'
+        value:  0
+    DW3000_DEVICE_0_SS:
+        description: 'Slave Select Pin'
+        value:  15
+    DW3000_DEVICE_0_RST:
+        description: 'Reset Pin'
+        value:  14
+    DW3000_DEVICE_0_IRQ:
+        description: 'Interrupt Request Pin'
+        value:  26
+    DW3000_DEVICE_BAUDRATE:
+        description: 'BAUDRATE 8000kHz'
+        value: 8000
+    DW3000_DEVICE_0_TX_ANT_DLY:
+        description: 'TX_ANT_DLY'
+        value: 0x4050
+    DW3000_DEVICE_0_RX_ANT_DLY:
+        description: 'RX_ANT_DLY'
+        value: 0x4050
+
+    MPU6500_ONB:
+        description: 'mpu6500 as part of mpu9250'
+        value:  0
+
+
+syscfg.vals.DW3000_DEVICE_0:
+    SPI_0_MASTER: 1
+
+syscfg.vals:
+    MCU_TARGET: nRF52832
+    MCU_LFCLK_SOURCE: LFXO
+
+    SPI_0_MASTER_PIN_SCK: 6
+    SPI_0_MASTER_PIN_MOSI: 8
+    SPI_0_MASTER_PIN_MISO: 7
+
+    I2C_1_PIN_SCL: 12
+    I2C_1_PIN_SDA: 11
+    I2C_1_FREQ_KHZ: 400
+
+    UART_0_PIN_TX: 19
+    UART_0_PIN_RX: 20
+    UART_0_PIN_RTS: -1
+    UART_0_PIN_CTS: -1
+    CONFIG_FCB_FLASH_AREA: FLASH_AREA_NFFS
+    REBOOT_LOG_FLASH_AREA: FLASH_AREA_REBOOT_LOG
+    NFFS_FLASH_AREA: FLASH_AREA_NFFS
+    COREDUMP_FLASH_AREA: FLASH_AREA_IMAGE_1
+    MCU_DCDC_ENABLED: 1
+    BOOT_SERIAL_DETECT_PIN: 2  # Button 1
+    SENSOR_OIC : 0
+
+syscfg.vals.BLE_LP_CLOCK:
+    TIMER_0: 0
+    TIMER_5: 1
+    OS_CPUTIME_FREQ: 32768
+    OS_CPUTIME_TIMER_NUM: 5
+    BLE_XTAL_SETTLE_TIME: 1500
+
+
+syscfg.vals.UWB_DEVICE_0:
+    DW3000_DEVICE_0: 1
+    UWB_DEV_RXDIAG_MAXLEN: 256

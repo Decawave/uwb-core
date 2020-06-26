@@ -1,0 +1,7 @@
+# Top Level UWB-Core module
+KBUILD_CFLAGS   += -fms-extensions
+
+src := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+ccflags-y += -I$(src)/include
+obj-m := uwb-hal.o

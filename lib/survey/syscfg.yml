@@ -1,0 +1,26 @@
+
+syscfg.defs:
+    SURVEY_ENABLED:
+        description: 'Enable automatic site survey'
+        value: 1
+    SURVEY_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+    SURVEY_NNODES:
+        description: 'Maximum number of node within survey'
+        value: 8
+    SURVEY_NFRAMES:
+        description: 'Circular buffer size for nrngs'
+        value: 2
+    SURVEY_MASK:
+        description: 'The survey->seq_num is dreived from ccp->idx and advances every 1UL << SURVEY_MASK ccp ticks'
+        value: 3
+    SURVEY_RANGE_SLOT:
+        description: 'TDMA slot to perform survey'
+        value: 2
+    SURVEY_BROADCAST_SLOT:
+        description: 'TDMA slot to perform broadcast survey results'
+        value: 3
+    SURVEY_RX_TIMEOUT:
+        description: 'timeout delay for listening for a broadcast (usec)'
+        value: ((uint16_t)0x300)

@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 3.2)
+project(hikey960_dwmX000 VERSION ${VERSION} LANGUAGES C)
+
+file(GLOB ${PROJECT_NAME}_SOURCES
+    ${PROJECT_SOURCE_DIR}/src/*.c
+)
+
+file(GLOB ${PROJECT_NAME}_HEADERS
+    ${PROJECT_SOURCE_DIR}/include/bsp/*.h
+    ${PROJECT_SOURCE_DIR}/src/*.h
+)
+
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/../../../bin/targets/syscfg/generated/include
+)
+
+source_group(include/${PROJECT_NAME} FILES ${${PROJECT_NAME}_HEADERS})
+source_group(lib FILES ${${PROJECT_NAME}_SOURCES})
+
+add_library(${PROJECT_NAME}
+    STATIC
+    ${${PROJECT_NAME}_SOURCES}
+    ${${PROJECT_NAME}_HEADERS}
+)
+
+include(GNUInstallDirs)
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      ${PROJECT_SOURCE_DIR}/../dpl/include
+)
+
+target_link_libraries(
+    ${PROJECT_NAME}
+)
+
+install(
+    TARGETS ${PROJECT_NAME} ARCHIVE
+    DESTINATION lib
+)
+
+install(DIRECTORY include/ DESTINATION include/
+    FILES_MATCHING PATTERN *.h
+)
+

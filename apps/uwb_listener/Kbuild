@@ -1,0 +1,14 @@
+src := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+ccflags-y += -I$(src)/include
+ccflags-y += -I$(src)/../../hw/drivers/uwb/include
+ccflags-y += -I$(src)/../../lib/json/include
+ccflags-y += -I$(src)/../../lib/uwb_softfloat/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../bin/targets/syscfg/generated/include
+
+obj-m := uwb_listener.o
+uwb_listener-y := src/uwb_listener.o
+#uwb_listener-y += src/listener_encode.o
+uwb_listener-y += src/listener_chrdev.o
+uwb_listener-y += src/listener_sysfs.o

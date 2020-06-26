@@ -1,0 +1,11 @@
+ccflags-y += -I$(src)/include
+ccflags-y += -I$(src)/../../hw/drivers/uwb/include
+ccflags-y += -I$(src)/../../lib/json/include
+ccflags-y += -I$(src)/../../lib/uwb_softfloat/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../bin/targets/syscfg/generated/include
+
+obj-m := uwb_wire_listener.o
+uwb_wire_listener-y := src/uwb_wire_listener.o
+uwb_wire_listener-y += src/uwb_wire_listener_chrdev.o
+uwb_wire_listener-y += src/uwb_wire_listener_sysfs.o

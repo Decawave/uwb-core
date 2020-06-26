@@ -1,0 +1,26 @@
+
+syscfg.defs:
+    UWB_TRANSPORT_ENABLED:
+        description: 'Enable UWB transport layer'
+        value: 1
+    UWB_TRANSPORT_MBUF_POOL_ENABLE:
+        description: 'Enable internal mbuf'
+        value: 1
+    UWB_TRANSPORT_NUM_MBUFS:
+        description: 'Size of the uwb_transport memory pool'
+        value: 16
+    UWB_TRANSPORT_MBUF_SIZE:
+        description: 'Size of payload portion of memory buffer'
+        value: 512
+    UWB_TRANSPORT_SUBSLOT_GUARD:
+        description: 'SUBSLOT guardzone (us)'
+        value: 400
+    UWB_TRANSPORT_PERIOD_END_GUARD:
+        description: 'End of SLOT guardzone where no transmission will be done (us)'
+        value: 2000
+    UWB_TRANSPORT_STATS:
+        description: 'Enable stat'
+        value: 0
+    UWB_TRANSPORT_STATS_BITRATE:
+        description: 'Enable bitrate stat'
+        value: 0

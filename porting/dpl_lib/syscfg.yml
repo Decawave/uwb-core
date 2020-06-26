@@ -1,0 +1,13 @@
+syscfg.defs:
+    DPL_SYSCLI_ENABLED:
+        description: 'Enable CLI for DPL os replacements'
+        value: 0
+    DPL_MEMPOOL_CHECK:
+        description: 'Whether to do stack sanity check of mempool operations'
+        value: 0
+    DPL_MEMPOOL_GUARD:
+        description: 'Insert guard area at the end of mempool'
+        value: 0
+    DPL_MEMPOOL_POISON:
+        description: 'Whether to do write known pattern to freed memory'
+        value: 0

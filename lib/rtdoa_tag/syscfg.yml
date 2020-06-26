@@ -1,0 +1,6 @@
+
+syscfg.defs:
+      RTDOA_TAG_ENABLED:
+        description: 'Enable rtdoa tag services'
+        value: 1
+        restrictions: RTDOA_ENABLED

@@ -1,0 +1,24 @@
+src := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+ccflags-y += -I$(src)/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../lib/uwb_softfloat/include
+ccflags-y += -I$(src)/../../hw/drivers/uwb/include
+ccflags-$(CONFIG_UWB_DW1000) += -I$(src)/../../hw/drivers/uwb/uwb_dw1000/include
+ccflags-$(CONFIG_UWB_DW3000) += -I$(src)/../../hw/drivers/uwb/uwb_dw3000/include
+ccflags-y += -I$(src)/../../porting/dpl_lib/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/uwb_hal/include
+ccflags-y += -I$(src)/../../bin/targets/syscfg/generated/include
+ccflags-y += -I$(src)/../../sys/uwbcfg/include
+ccflags-y += -I$(src)/../../lib/dsp/include
+ccflags-y += -I$(src)/../../lib/euclid/include
+ccflags-y += -I$(src)/../../lib/uwb_rng/include
+ccflags-y += -I$(src)/../../lib/uwb_ccp/include
+ccflags-y += -I$(src)/../../lib/tdma/include
+ccflags-y += -I$(src)/../../lib/uwb_transport/include
+
+
+obj-m := uwb_tp_test.o
+uwb_tp_test-y := src/uwb_tp_test.o
+uwb_tp_test-y += src/uwb_tp_chrdev.o

@@ -1,0 +1,81 @@
+syscfg.defs:
+    UWB_DEV_TASK_PRIO:
+        description: 'Task priority (for instance 0)'
+        value:  0x10
+    UWB_DEV_TASK_STACK_SZ:
+        description: 'Size of interrupt task stack'
+        value: 256
+    UWB_RX_BUFFER_SIZE:
+        description: 'Size of the rx buffer in the uwb_dev'
+        value:  1024
+    UWB_PKG_INIT_LOG:
+        description: 'Enable init messages showing each package has been initialised'
+        value:  1
+    UWB_DEV_RXDIAG_MAXLEN:
+        description: 'Maximum size of rxdiag structure'
+        value:  20
+    UWB_DEVICE_0:
+        description: 'UWB_0 Device Enable. BSP uses this to enable the specific uwb device'
+        value:  0
+    UWB_DEVICE_1:
+        description: 'UWB_1 Device Enable. BSP uses this to enable the specific uwb device'
+        value:  0
+    UWB_DEVICE_2:
+        description: 'UWB_2 Device Enable. BSP uses this to enable the specific uwb device'
+        value:  0
+    UWB_DEVICE_MAX:
+        description: 'Max number of UWB_DEVICES allowed in system'
+        value:  3
+    UWB_CLI:
+        description: 'Command line interface'
+        value:  0
+    UWB_CLI_BACKTRACE:
+        description: 'CLI for spi and irq backtrace'
+        value:  0
+        requires:
+          - UWB_CLI
+    UWB_STS_TS_MATCH_THRESHOLD:
+        description:
+            If ipatov and sts timestamps differ by more than this value
+            they are considered invalid
+        value:  30
+    LOCAL_COORDINATE_X:
+        description: >
+            Default Anchor X Coordinate
+        value: ((float)0.0f)
+    LOCAL_COORDINATE_Y:
+        description: >
+            Default Anchor Y Coordinate
+        value: ((float)0.0f)
+    LOCAL_COORDINATE_Z:
+        description: >
+            Default Anchor Z Coordinate
+        value: ((float)0.0f)
+    RANGE_VARIANCE:
+        description: >
+            Range Measurement Variance
+        value: ((float)5.4444e-04)
+    AZIMUTH_VARIANCE:
+        description: >
+            Azimuth Measurement Variance
+        value: ((float)2.91e-2)
+    OS_LATENCY:
+        description: >
+            OS Latency Guardband (usec)
+        value: ((uint32_t)800)
+    PANID:
+        description: >
+          Default Pan ID
+        value: ((const uint16_t)0xdeca)
+    DW_DEVICE_ID_0:
+        description: >
+          Default Device ID, defaults to last 16 bit of prodid if set to 0 here
+        value: 0
+    DW_DEVICE_ID_1:
+        description: >
+          Default Device ID, defaults to last 16 bit of prodid if set to 0 here
+        value: 0
+    DW_DEVICE_ID_2:
+        description: >
+          Default Device ID, defaults to last 16 bit of prodid if set to 0 here
+        value: 0

@@ -1,0 +1,95 @@
+syscfg.defs:
+    UWBCFG_ENABLED:
+        description: 'UWB Configuration manager enabled'
+        value: 1
+    UWBCFG_NMGR:
+        description: 'Enable Newtmgr interface'
+        value: 0
+    UWBCFG_CLI:
+        description: 'Enable CLI interface'
+        value: 0
+    UWBCFG_APPLY_AT_INIT:
+        description: 'Commit config at init'
+        value: 1
+    UWBCFG_DEF_CH:
+        description: 'Default UWB Channel'
+        value: '"5"'
+    UWBCFG_DEF_PRF:
+        description: 'Default UWB PRF (MHz)'
+        value: '"64"'
+    UWBCFG_DEF_DATARATE:
+        description: 'Default UWB Datarate (110k, 850k, 6m8)'
+        value: '"6m8"'
+    UWBCFG_DEF_PACLEN:
+        description: 'Default UWB PAC Length (8, 16, 32, 64)'
+        value: '"8"'
+    UWBCFG_DEF_RX_PREAM_CIDX:
+        description: 'Default UWB RX Preamble Code Index'
+        value: '"9"'
+    UWBCFG_DEF_TX_PREAM_CIDX:
+        description: 'Default UWB TX Preamble Code Index'
+        value: '"9"'
+    UWBCFG_DEF_RX_PHR_MODE:
+        description: 'Default UWB PHR Mode (s, e)'
+        value: '"e"'
+    UWBCFG_DEF_RX_PHR_RATE:
+        description: 'Default UWB PHR Rate (0 = std, 1 = data)'
+        value: '"0"'
+    UWBCFG_DEF_RX_SFD_TYPE:
+        description: 'Default UWB SFD Type (0, 1)'
+        value: '"1"'
+    UWBCFG_DEF_RX_STS_MODE:
+        description: 'Default UWB Sts Mode (0, 1, 2, sdc, 4z)'
+        value: '"0"'
+    UWBCFG_DEF_RX_STS_LEN:
+        description: 'Default UWB Sts Length (32-2040 in steps of 8)'
+        value: '"64"'
+    UWBCFG_DEF_RX_PDOA_MODE:
+        description: 'Default UWB PDOA Mode (0, 1, 2, 3)'
+        value: '"0"'
+    UWBCFG_DEF_RX_DIAG_EN:
+        description: 'Default UWB RX Diagnostics enabled'
+        value: '"0x1"'
+    UWBCFG_DEF_TX_PREAM_LEN:
+        description: 'Default UWB Preamble Lenght'
+        value: '"128"'
+    UWBCFG_DEF_TXRF_POWER_COARSE:
+        description: 'Default UWB Coarse TX Power (0,3,6,..,18)'
+        value: '"15"'
+    UWBCFG_DEF_TXRF_POWER_FINE:
+        description: 'Default UWB FINE TX Power (0,1,2,..,31)'
+        value: '"22"'
+    UWBCFG_DEF_TXRF_VCM_LO:
+        description: 'Default UWB FINE TX Power (0,1,2,..,31)'
+        value: '"15"'
+    UWBCFG_DEF_RX_ANTDLY:
+        description: 'Default UWB RX Antenna delay'
+        value: '"0x4050"'
+    UWBCFG_DEF_TX_ANTDLY:
+        description: 'Default UWB TX Antenna delay'
+        value: '"0x4050"'
+    UWBCFG_DEF_RX_ANTSEP:
+        description: 'Default UWB RX Antenna separation distance in m'
+        value: '"0.0205"'
+    UWBCFG_DEF_EXT_CLKDLY:
+        description: 'Default UWB External clock delay'
+        value: '"0"'
+    UWBCFG_DEF_ROLE:
+        description: 'Default UWB Role'
+        value: '"0x0000"'
+    UWBCFG_DEF_FRAME_FILTER:
+        description: 'Default MAC FrameFilter (0x0000 = no filter)'
+        value: '"0x0000"'
+    UWBCFG_DEF_XTAL_TRIM:
+        description: 'Default XTAL Trim value (0xff = no trim, or use OTP value)'
+        value: '"0xff"'
+    UWBCFG_DEF_CIR_SIZE:
+        description: 'Number of bins to extract from CIR, set to 0(zero) to disable '
+        value: '"0"'
+    UWBCFG_DEF_CIR_OFFSET:
+        description: 'Offset relative leading edge to start extracting CIR from'
+        value: '"0"'
+
+syscfg.vals.DW3000_DEVICE_0:
+    UWBCFG_DEF_TXRF_POWER_COARSE: '"3"'
+    UWBCFG_DEF_TXRF_POWER_FINE: '"31"'

@@ -1,0 +1,12 @@
+
+syscfg.defs:
+      TWR_SS_ENABLED:
+        description: 'Enable ranging services'
+        value: 1
+        restrictions: UWB_RNG_ENABLED
+      TWR_SS_TX_HOLDOFF:
+        description: 'tx holdoff delay for SS TWR (usec)'
+        value: ((uint32_t)0x0300)
+      TWR_SS_RX_TIMEOUT:
+        description: 'TOA timeout delay for SS TWR (usec)'
+        value: ((uint16_t)0x30)

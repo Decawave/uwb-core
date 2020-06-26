@@ -1,0 +1,17 @@
+
+syscfg.defs:
+      TWR_SS_EXT_NRNG_ENABLED:
+        description: 'Enable toplevel ranging services'
+        value: 1
+        restrictions: NRNG_ENABLED
+      TWR_SS_EXT_NRNG_TX_HOLDOFF:
+        description: 'tx holdoff delay for DS TWR (usec)'
+        value: ((uint32_t)0x300)
+      TWR_SS_EXT_NRNG_RX_TIMEOUT:
+        description: 'TOA timeout delay for DS TWR (usec)'
+        value: ((uint16_t)0x10)
+      TWR_SS_EXT_NRNG_TX_GUARD_DELAY:
+        value: ((uint32_t)0x90)
+      CELL_ENABLED:
+        description: 'Cell network model on slot decoding'
+        value: 0

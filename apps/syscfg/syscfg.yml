@@ -1,0 +1,141 @@
+syscfg.vals:
+    CONSOLE_UART: 1
+    CONSOLE_RTT: 0
+    CONSOLE_UART_BAUD: 1000000
+    CONSOLE_UART_TX_BUF_SIZE: 1024
+    CONSOLE_HISTORY_SIZE: 8
+
+    LOG_LEVEL: 0
+    LOG_SOFT_RESET: 0
+    UWB_DEVICE_0: 1
+    UWB_DEVICE_1: 1
+    DW1000_DEVICE_0: 1
+    DW3000_DEVICE_0: 1
+    CONFIG_NFFS: 1
+    CONFIG_NFFS_DIR: '"/data/local/tmp"'
+    CONFIG_NFFS_FILE: '"/data/local/tmp/cfg.txt"'
+    CONFIG_NFFS_MAX_LINES: 1024
+
+    FS_XTALT_AUTOTUNE_ENABLED: 0
+    DW1000_BIAS_CORRECTION_ENABLED: 0
+    TDMA_NSLOTS: 16
+    NRNG_DEVICE_TYPE: 1
+    HARDFLOAT: 1
+    STATS_ENABLED: 1
+    STATS_NAMES: 1
+    STATS_CLI: 0
+    BCAST_OTA_CLI: 0
+    IMGMGR_CLI: 0
+    SHELL_TASK: 0
+    UWB_CCP_VERBOSE: 1
+    UWB_WCS_VERBOSE: 1
+    SURVEY_VERBOSE: 1
+    RNG_VERBOSE: 2
+    NRNG_VERBOSE: 0
+    TDMA_SANITY_INTERVAL: 0
+    OS_LATENCY: 1000
+    UWB_PAN_VERSION_ENABLED: 0
+
+    NRNG_VERBOSE: 1
+    NRNG_DEVICE_TYPE: 1
+
+    # Pan related parameters, lease in s, lease exp margin in ms
+    UWB_PAN_ENABLED: 1
+    UWB_PAN_RX_TIMEOUT: ((uint16_t){4000})
+    UWB_PAN_LEASE_TIME: 3600
+    UWB_PAN_LEASE_EXP_MARGIN: 60000
+
+    ## Panmaster
+    PANMASTER_FCB: 1
+    PANMASTER_FCB_FLASH_AREA: FLASH_AREA_REBOOT_LOG
+    REBOOT_LOG_FLASH_AREA: ""
+    PANMASTER_NFFS: 0
+    PANMASTER_MAXNUM_NODES: 64
+    PANMASTER_DEFAULT_PANID: '"0xDECA"'
+    PANMASTER_CLI: 1
+
+    SURVEY_RANGE_SLOT: 3
+    SURVEY_BROADCAST_SLOT: 4
+
+    # By default we're a tag
+    UWBCFG_DEF_ROLE: '"0x0"'
+    UWBCFG_DEF_FRAME_FILTER: '"0xF"'
+    UWBCFG_APPLY_AT_INIT: 1
+
+    BLEPRPH_LOG_ENABLE: 0
+    BLE_ROLE_BROADCASTER: 1
+    BLE_ROLE_CENTRAL: 0
+    BLE_ROLE_OBSERVER: 0
+    BLE_ROLE_PERIPHERAL: 1
+
+    UWB_CLI: 1
+    UWB_CLI_BACKTRACE: 1
+    UWB_DEV_RXDIAG_MAXLEN: 256
+    DW1000_CLI_EVENT_COUNTERS: 1
+    UWB_TRANSPORT_STATS: 1
+    UWB_PKG_INIT_LOG: 0
+    CIR_ENABLED: 1
+    CIR_VERBOSE: 1
+    CIR_OFFSET: 8
+    CIR_MAX_SIZE: 16
+
+syscfg.defs:
+    PANMASTER_ISSUER:
+        description: 'Act as panmaster in the network'
+        value: 0
+    NRANGES_ANCHOR:
+        description: 'Act as slave-anchor in the network'
+        value: 0
+    NODE_START_SLOT_ID:
+        description: >
+            Slot ID from which the nodes should respond
+        value: 1
+    NODE_END_SLOT_ID:
+        description: >
+            Slot ID till which the nodes should respond
+        value: 4
+
+    CCP_TOF_COMP_LOCATION_X:
+        description: 'x-location of this node in relation to the ccp master'
+        value: ((float){2.0})
+    CCP_TOF_COMP_LOCATION_Y:
+        description: 'y-location of this node in relation to the ccp master'
+        value: ((float){0.0})
+    CCP_TOF_COMP_LOCATION_Z:
+        description: 'z-location of this node in relation to the ccp master'
+        value: ((float){0.0})
+
+syscfg.vals.PANMASTER_ISSUER:
+    UWBCFG_DEF_ROLE: '"0x7"'
+
+syscfg.vals.NRANGES_ANCHOR:
+    UWBCFG_DEF_ROLE: '"0x4"'
+    NRNG_DEVICE_TYPE: 1
+
+syscfg.defs."!TIMESCALE_ENABLED":
+    TIMESCALE_ENABLED:
+        description: "Placeholder"
+        value: 0
+
+syscfg.defs."!DW1000_LWIP":
+    DW1000_LWIP:
+        description: "Placeholder"
+        value: 0
+syscfg.defs."!DW3000_LWIP":
+    DW3000_LWIP:
+        description: "Placeholder"
+        value: 0
+
+syscfg.defs."!OS_CFG_ALIGN_4":
+    OS_CFG_ALIGN_4:
+        description: "Placeholder"
+        value: 0
+
+syscfg.defs."!DW1000_DEVICE_2":
+    DW1000_DEVICE_2:
+        description: "Placeholder"
+        value: 0
+syscfg.defs."!DW3000_DEVICE_2":
+    DW3000_DEVICE_2:
+        description: "Placeholder"
+        value: 0

@@ -1,0 +1,34 @@
+
+syscfg.defs:
+      NRNG_ENABLED:
+        description: 'Enable toplevel ranging services'
+        value: 1
+      NRNG_TX_HOLDOFF:
+        description: 'tx holdoff delay for TWR (usec)'
+        value: ((uint32_t)0x300)
+      NRNG_RX_TIMEOUT:
+        description: 'TOA timeout delay for TWR (usec)'
+        value: ((uint16_t)0x10)
+      NRNG_TX_GUARD_DELAY:
+        value: ((uint16_t)0x90)
+      NRNG_DEVICE_TYPE:
+        description: 'Initiator(tag = 0) or Responder(node = 1)'
+        value: 1
+      NRNG_NNODES:
+        description: 'Number of nodes to be ranged with'
+        value: 16
+      NRNG_NFRAMES:
+        description: 'Number of frames expected'
+        value: 32
+      NRNG_NTAGS:
+        description: 'Max number of tags to allow in slots'
+        value: 4
+      NRNG_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+      NRNG_STATS:
+        description: 'Enable statistics for the nrng module'
+        value: 1
+      NRNG_HUMAN_READABLE_RANGES:
+        description: 'If set to zero the output from the tag is ((uint32_t*)(float*)), otherwise mm'
+        value: 0

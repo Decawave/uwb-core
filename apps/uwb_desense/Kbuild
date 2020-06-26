@@ -1,0 +1,22 @@
+src := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+ccflags-y += -I$(src)/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../lib/uwb_softfloat/include
+ccflags-y += -I$(src)/../../hw/drivers/uwb/include
+ccflags-$(CONFIG_UWB_DW1000) += -I$(src)/../../hw/drivers/uwb/uwb_dw1000/include
+ccflags-$(CONFIG_UWB_DW3000) += -I$(src)/../../hw/drivers/uwb/uwb_dw3000/include
+ccflags-y += -I$(src)/../../porting/dpl_lib/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/include
+ccflags-y += -I$(src)/../../porting/dpl/kernel/uwb_hal/include
+ccflags-y += -I$(src)/../../bin/targets/syscfg/generated/include
+ccflags-y += -I$(src)/../../sys/uwbcfg/include
+ccflags-y += -I$(src)/../../lib/uwb_rf_tests/desense/include
+
+
+obj-m := uwb_desense.o
+uwb_desense-y := src/uwb_desense.o
+uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense.o
+uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_cli.o
+uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_sysfs.o
+uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_debugfs.o

@@ -20,7 +20,7 @@ add_subdirectory(porting/dpl_os)
 add_subdirectory(porting/dpl_lib)
 add_subdirectory(hw/drivers/uwb)
 add_subdirectory(hw/drivers/uwb/uwb_dw1000)
-add_subdirectory(hw/drivers/uwb/uwb_dw3000)
+#3K add_subdirectory(hw/drivers/uwb/uwb_dw3000-c0)  # 3KAccess Only
 add_subdirectory(lib)
 add_subdirectory(sys)
 #add_subdirectory(apps/twr_tag_tdma)

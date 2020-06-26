@@ -3,15 +3,22 @@
 - See [HiKey960 Prerequisite](README_hikey960.md) if building uwb-core module for HiKey960 development platform.
 - See [Raspberry Pi Prerequisite](./porting/dpl/kernel/README.md) if building uwb-core module for Raspberry Pi.
 
-The uwb-core support both the DW1000 and DW3HiKey960X00 devices and detect the device at runtime. The uwb-core comprises of two modules 
+The uwb-core support both the DW1000 and DW3HiKey960X00 devices and detect the device at runtime. The uwb-core comprises of two modules
 
 - ./uwbcore.ko
 - ./porting/dpl/kernel/uwb_hal/uwb-hal.ko
-  
+
 ## How To Build
+
+### Preparing
+
+```
+make -f Makefile.cmake kernel-prereq
+```
 
 ### As An In-Kernel Driver:
 - Place contents in <kernel-src>/driver/misc/uwbcore
+- Also include the specific drivers needed from separate repos (decawave-uwb-dw1000, decawave-uwb-dw3100-c0,...)
 - Add `CONFIG_UWB_DW1000=y` to config.
 - Add `CONFIG_UWB_DW3000=y` to config.
 - Add `CONFIG_UWB_CORE=y` (or m) to config.
@@ -38,14 +45,10 @@ The uwb-core support both the DW1000 and DW3HiKey960X00 devices and detect the d
     <project path="modules/uwbcore/bin" name="Decawave/uwb-core-syscfg" remote="uwb-core-syscfg" revision="master" />
   </manifest>
   ```
-  
+
 - Perform `repo sync`.
 - Add `modules/uwbcore` to `EXT_MODULES` in build.config.
   ```
   echo EXT_MODULES="modules/uwbcore" >> build.config
   ```
 - Build as usual.
-
-
-
-

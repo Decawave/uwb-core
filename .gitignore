@@ -39,3 +39,8 @@ repos
 *.ko
 modules.order
 Module.symvers
+# Below are symlinks if present
+hw/drivers/uwb/uwb_dw1000
+hw/drivers/uwb/uwb_dw3000-c0
+lib/cir/cir_dw1000
+lib/cir/cir_dw3000-c0

@@ -20,7 +20,10 @@
 project.name: "decawave-uwb-core"
 
 project.repositories:
-  - apache-mynewt-core
+    - apache-mynewt-core
+    - decawave-uwb-dw1000
+#XX     - decawave-uwb-apps
+#3K     - decawave-uwb-dw3000-c0     # 3KAccess Only
 
 # Use github's distribution mechanism for core ASF libraries.
 # This provides mirroring automatically for us.
@@ -30,3 +33,17 @@ repository.apache-mynewt-core:
     vers: 1.7.0
     user: apache
     repo: mynewt-core
+
+repository.decawave-uwb-dw1000:
+    type: git
+    vers: 0-dev
+    user: decawave
+    repo: uwb-dw1000
+    url: 'git@github.com:Decawave/uwb-dw1000.git'
+
+#3K repository.decawave-uwb-dw3000-c0:                    # 3KAccess Only
+#3K     type: git                                         # 3KAccess Only
+#3K     vers: 0-dev                                       # 3KAccess Only
+#3K     user: decawave                                    # 3KAccess Only
+#3K     repo: uwb-dw3100-c0                               # 3KAccess Only
+#3K     url: 'git@github.com:Decawave/uwb-dw3100-c0.git'  # 3KAccess Only

@@ -8,6 +8,9 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 3
 VERSION_PATCH = 1
 
+#hw/drivers/uwb/uwb_dw1000/src/dw1000_mac.c :
+#    ln -s ../../../../decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000 hw/drivers/uwb/uwb_dw1000
+
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 
 COMMON_DEFINITIONS =                                      \
@@ -103,7 +106,18 @@ cortex-a73-aosp:
 
 kernel-prereq:
 	@$(info Building generic build in preparation for kernel modules)
-	mkdir -p build_generic
+	@mkdir -p build_generic
+	@mkdir -p repos
+	@$(info Setting up symlinks to drivers)
+	rm -f repos/decawave-uwb-dw*
+	ln -s ../../decawave-uwb-dw1000 repos/decawave-uwb-dw1000
+	ln -s ../../decawave-uwb-dw3000-c0 repos/decawave-uwb-dw3000-c0
+	rm -f hw/drivers/uwb/uwb_dw*
+	ln -s ../../../../decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000 hw/drivers/uwb/uwb_dw1000
+	ln -s ../../../../decawave-uwb-dw3000-c0/hw/drivers/uwb/uwb_dw3000-c0 hw/drivers/uwb/uwb_dw3000-c0
+	rm -f lib/cir/cir_dw*
+	ln -s ../../../decawave-uwb-dw1000/lib/cir/cir_dw1000 lib/cir/cir_dw1000
+	ln -s ../../../decawave-uwb-dw3000-c0/lib/cir/cir_dw3000-c0 lib/cir/cir_dw3000-c0
 	cd build_generic && cmake -G"Unix Makefiles" $(COMMON_DEFINITIONS)  \
 		-DCMAKE_TOOLCHAIN_FILE=../toolchain/generic.cmake ..
 	make -C build_generic

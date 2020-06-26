@@ -35,11 +35,11 @@ pkg.deps:
 pkg.deps.DW1000_DEVICE_0:
     - '@decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000'
 pkg.deps.DW3000_DEVICE_0:
-    - '@decawave-uwb-dw3000/hw/drivers/uwb/uwb_dw3000'
+    - '@decawave-uwb-dw3000-c0/hw/drivers/uwb/uwb_dw3000-c0'
 
 pkg.deps.CIR_ENABLED:
     - '@decawave-uwb-dw1000/lib/cir/cir_dw1000'
-    - '@decawave-uwb-dw3100-c0/lib/cir/cir_dw3100-c0'
+    - '@decawave-uwb-dw3000-c0/lib/cir/cir_dw3000-c0'
 
 pkg.cflags:
   - '-Wno-format'

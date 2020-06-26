@@ -50,8 +50,8 @@
 #include "bsp/bsp.h"
 
 #if MYNEWT_VAL(DW3000_DEVICE_0)
-#include "dw3000/dw3000_dev.h"
-#include "dw3000/dw3000_hal.h"
+#include "dw3000-c0/dw3000_dev.h"
+#include "dw3000-c0/dw3000_hal.h"
 #endif
 #if MYNEWT_VAL(ETH_0)
 #include "stm32_eth/stm32_eth.h"

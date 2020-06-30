@@ -81,7 +81,7 @@ before_install:
   - go version
 
 install:
-  - git clone https://github.com/decawave/mynewt-travis-ci -b nc_core_restructure $HOME/ci
+  - git clone https://github.com/decawave/mynewt-travis-ci $HOME/ci
   - chmod +x $HOME/ci/*.sh
   - $HOME/ci/${TRAVIS_OS_NAME}_travis_install.sh
 
@@ -90,7 +90,7 @@ before_script:
   - gcc --version
   #- aarch64-linux-gnu-gcc --version
   - if [ "${TEST}" != "TEST_ALL" ]; then arm-none-eabi-gcc --version; fi
-  - cp -R $HOME/ci/uwb-core-nw-project.yml project.yml
+  - cp -R $HOME/ci/uwb-core-project.yml project.yml
   # Intentionally use the targets from the apps directory here too
   - cp -R $HOME/ci/uwb-apps-targets targets
     # Test for 3000 access
@@ -101,6 +101,12 @@ before_script:
   - sed -i "s/^#XX\ //g" project.yml
     # pass in the number of target sets
   - $HOME/ci/prepare_test.sh $VM_AMOUNT
+    # Uncommend below to checkout the pre-generated syscfg
+    #- if [ "${TEST}" == "BUILD_TARGETS" ]; then git clone git@github.com:Decawave/uwb-core-syscfg $HOME/uc-syscfg;ln -s $HOME/uc-syscfg/bin bin; ls -l ./; ls -l bin/; fi
+    # Create symlink in repos back to decawave-uwb-core to allow linux
+    # build to still find include paths. This is needed because we're not checked out as
+    # part of uwb-apps
+  - if [ "${TEST}" == "BUILD_TARGETS" ]; then ln -s $(pwd) repos/decawave-uwb-core; fi
 
 
 script:

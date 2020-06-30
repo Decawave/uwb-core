@@ -96,7 +96,4 @@ if (( $HAS_3K_ACCESS ));then
 fi
 
 echo " * To undo the modifications to repository files, run setup with \"restore\" as the first argument"
-echo -e "\nproject.yml:\n-------------------"
-cat project.yml
-echo -e "-------------------"
 

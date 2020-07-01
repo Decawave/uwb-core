@@ -2,19 +2,19 @@
 
 function enable3kaccess()
 {
-    sed -i "s/^#3K\ //g" project.yml
-    sed -i "s/^#3K\ //g" repository.yml
-    sed -i "s/^#3K\ //g" Makefile.kernel
-    sed -i "s/^#3K\ //g" CMakeLists.txt
+    sed -i "s/^#3K\ //g" ${DIR}/project.yml
+    sed -i "s/^#3K\ //g" ${DIR}/repository.yml
+    sed -i "s/^#3K\ //g" ${DIR}/Makefile.kernel
+    sed -i "s/^#3K\ //g" ${DIR}/CMakeLists.txt
 }
 
 function disable3kaccess()
 {
-    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' project.yml
-    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' repository.yml
-    sed -i '/^[^#]/ s/\(^.*CONFIG_UWB_DW3000.*$\)/X3K\ \1/' repository.yml
-    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' Makefile.kernel
-    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' CMakeLists.txt
+    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/project.yml
+    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/repository.yml
+    sed -i '/^[^#]/ s/\(^.*CONFIG_UWB_DW3000.*$\)/X3K\ \1/' ${DIR}/repository.yml
+    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/Makefile.kernel
+    sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/CMakeLists.txt
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -43,6 +43,10 @@ echo " * Checking access to dw3000-c0 repository"
 if git clone git@github.com:Decawave/uwb-dw3000-c0 ${TESTCO} --depth 1 -q > /dev/null 2>&1; then
     echo "   - Access to dw3000-c0 OK"
     enable3kaccess
+    if [ ! -d decawave-uwb-dw3000-c0 ];then
+        echo "   - Checking out dw3000-c0 repository to ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0"
+        git clone git@github.com:Decawave/uwb-dw3000-c0 ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0
+    fi
     HAS_3K_ACCESS=1
 else
     echo "   - Access to dw3000-c0 Denied"

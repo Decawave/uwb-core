@@ -3,7 +3,7 @@
 - See [HiKey960 Prerequisite](README_hikey960.md) if building uwb-core module for HiKey960 development platform.
 - See [Raspberry Pi Prerequisite](./porting/dpl/kernel/README.md) if building uwb-core module for Raspberry Pi.
 
-The uwb-core support both the DW1000 and DW3HiKey960X00 devices and detect the device at runtime. The uwb-core comprises of two modules
+The uwb-core support both the DW1000 and DW3X00 devices and detect the device at runtime. The uwb-core comprises of two modules
 
 - ./uwbcore.ko
 - ./porting/dpl/kernel/uwb_hal/uwb-hal.ko

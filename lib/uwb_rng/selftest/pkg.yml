@@ -17,19 +17,34 @@
 # under the License.
 #
 
-pkg.name: hw/drivers/uwb
-pkg.description: UWB driver interfaces
-pkg.author: "UWB Core <uwbcore@gmail.com>"
-pkg.homepage: "http:/www.decawave.com/"
+pkg.name: lib/uwb_rng/selftest
+pkg.type: unittest
+pkg.description: UWB ranging tests
+pkg.author: "Szymon Czapracki <szymon.czapracki@codecoup.pl>"
+pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
     - uwb
-pkg.req_apis:
-    - UWB_HW_IMPL
-pkg.priority: -1
-
-pkg.deps:
-    - porting/dpl/mynewt
-    - "@apache-mynewt-core/kernel/os"
 
 pkg.cflags:
+    - "-std=gnu99"
     - "-fms-extensions"
+
+pkg.lflags:
+    - "-lm"
+
+pkg.cflags.FLOAT_USER: -DFLOAT_SUPPORT
+
+pkg.deps:
+    - "@decawave-uwb-core/lib/uwb_rng"
+    - "@apache-mynewt-core/sys/console/stub"
+    - "@apache-mynewt-core/sys/log/stub"
+    - "@apache-mynewt-core/test/testutil"
+
+pkg.deps.SELFTEST:
+#    - "@decawave-uwb-core/porting/dpl_os"
+#    - "@decawave-uwb-core/hw/drivers/uwb"
+
+pkg.cflags.FLOAT_USER: -DFLOAT_SUPPORT
+
+pkg.apis:
+  - "UWB_HW_IMPL"

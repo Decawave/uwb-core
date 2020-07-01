@@ -84,6 +84,10 @@ rng_json_write(rng_json_t * json){
     JSON_VALUE_UINT(&value, json->utime);
     rc |= json_encode_object_entry(&json->encoder, "utime", &value);
 
+    if (json->seq){
+        JSON_VALUE_UINT(&value, json->seq);
+        rc |= json_encode_object_entry(&json->encoder, "seq", &value);
+    }
     if (json->code){
         JSON_VALUE_UINT(&value, json->code);
         rc |= json_encode_object_entry(&json->encoder, "c", &value);

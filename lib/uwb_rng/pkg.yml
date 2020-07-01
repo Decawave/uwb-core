@@ -33,10 +33,19 @@ pkg.lflags:
     - "-lm"
 
 pkg.deps:
+    - "@decawave-uwb-core/hw/drivers/uwb"
     - "@decawave-uwb-core/lib/rng_math"
     - "@decawave-uwb-core/lib/json"
     - "@decawave-uwb-core/lib/euclid"
     - "@decawave-uwb-core/lib/dsp"
+
+pkg.deps.SELFTEST:
+    - "@apache-mynewt-core/sys/stats/stub"
+
+pkg.cflags.FLOAT_USER: -DFLOAT_SUPPORT
+
+pkg.apis:
+  - "UWB_HW_IMPL"
 
 pkg.init:
     uwb_rng_pkg_init: 404

@@ -30,3 +30,6 @@ pkg.priority: -1
 pkg.deps:
     - porting/dpl/mynewt
     - "@apache-mynewt-core/kernel/os"
+
+pkg.cflags:
+    - "-fms-extensions"

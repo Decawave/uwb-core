@@ -32,6 +32,7 @@
 #include <defs/error.h>
 #include <hal/hal_bsp.h>
 #include <console/console.h>
+#include <streamer/streamer.h>
 
 #include <shell/shell.h>
 
@@ -53,7 +54,7 @@
 #endif
 
 static struct nmgr_transport nmgr_mstr_transport;
-
+static struct streamer *delayed_resp_streamer = 0;
 static uint16_t
 nmgr_mstr_get_mtu(struct os_mbuf *m)
 {
@@ -87,15 +88,14 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
     struct mgmt_cbuf *cb = &n_b;
 
     g_err |= cbor_read_object(&cb->it, attrs);
-    if (g_err) {
-        console_printf("gerr: '%d\n", g_err);
+    if (g_err && delayed_resp_streamer) {
+        streamer_printf(delayed_resp_streamer, "gerr: '%d\n", g_err);
     }
-    if (rc)
-    {
-        console_printf("nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
+    if (delayed_resp_streamer) {
+        streamer_printf(delayed_resp_streamer, "nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
     }
 
-#if MYNEWT_VAL(BCAST_OTA_DEBUG)
+#if 0
     printf("json:\n=========\n");
     CborValue it;
     CborParser p;
@@ -111,7 +111,7 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
     return (rc);
 }
 
-static int uwbcfg_cli_cmd(int argc, char **argv);
+static int uwbcfg_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer);
 
 #if MYNEWT_VAL(SHELL_CMD_HELP)
 const struct shell_param cmd_uwbcfg_param[] = {
@@ -126,16 +126,11 @@ const struct shell_cmd_help cmd_uwbcfg_help = {
 #endif
 
 
-static struct shell_cmd shell_uwbcfg_cmd = {
-    .sc_cmd = "uwbcfg",
-    .sc_cmd_func = uwbcfg_cli_cmd,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-    .help = &cmd_uwbcfg_help
-#endif
-};
+static struct shell_cmd shell_uwbcfg_cmd =
+    SHELL_CMD_EXT("uwbcfg", uwbcfg_cli_cmd, &cmd_uwbcfg_help);
 
 struct os_mbuf*
-get_txcfg_mbuf(uint32_t fields, char *cfgstr)
+get_txcfg_mbuf(uint32_t fields, char *cfgstr, struct streamer *streamer)
 {
     int rc;
     CborEncoder payload_enc;
@@ -189,7 +184,7 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr)
         // delimiters present in str[].
         while (token != NULL) {
             if (strstr(token, "save")) {
-                console_printf("  do_save\n");
+                streamer_printf(streamer, "  do_save\n");
                 do_save = true;
                 goto next;
             }
@@ -205,7 +200,7 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr)
             p++;
             for (int i=0;i<CFGSTR_MAX;i++) {
                 if (!strcmp(g_uwbcfg_str[i], field)) {
-                    console_printf("  %s -> '%s'\n", g_uwbcfg_str[i], p);
+                    streamer_printf(streamer, "  %s -> '%s'\n", g_uwbcfg_str[i], p);
                     g_err |= cbor_encode_text_stringz(&data_array_enc, p);
                     fields |= ((uint32_t)1<<i);
                     num_fields++;
@@ -218,7 +213,7 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr)
     } else {
         for (int i=0;i<CFGSTR_MAX;i++) {
             if (fields&((uint32_t)0x1<<i)) {
-                console_printf("  %s -> '%s'\n", g_uwbcfg_str[i], uwbcfg_internal_get(i));
+                streamer_printf(streamer, "  %s -> '%s'\n", g_uwbcfg_str[i], uwbcfg_internal_get(i));
                 g_err |= cbor_encode_text_stringz(&data_array_enc,
                                                   uwbcfg_internal_get(i));
                 num_fields++;
@@ -245,51 +240,57 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr)
         return rsp;
     }
 exit_err:
-    console_printf("something went wrong\n");
+    streamer_printf(streamer, "something went wrong\n");
     os_mbuf_free_chain(rsp);
     return 0;
 }
 
 
 static int
-uwbcfg_cli_cmd(int argc, char **argv)
+uwbcfg_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer)
 {
     const char* sending = "sending new cfg to %x:\n";
     struct uwb_dev *udev = uwb_dev_idx_lookup(0);
 
     if (argc < 2) {
-        console_printf("Too few args\n");
+        streamer_printf(streamer, "Too few args\n");
         return 0;
     }
     if (!strcmp(argv[1], "txmycfg")) {
         uint16_t addr;
         uint32_t fields = 0x1fff;
         if (argc < 3) {
-            console_printf("pls provide <addr>\n");
+            streamer_printf(streamer, "pls provide <addr>\n");
             return 0;
         }
         addr = strtol(argv[2], NULL, 0);
         if (argc > 3) {
             fields = strtol(argv[3], NULL, 0);
         }
-        console_printf(sending, addr);
-        struct os_mbuf *om = get_txcfg_mbuf(fields, 0);
+        streamer_printf(streamer, sending, addr);
+        struct os_mbuf *om = get_txcfg_mbuf(fields, 0, streamer);
         if (!om) return 0;
         nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_NMGR_UWB);
+        delayed_resp_streamer = streamer;
         uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        os_time_delay(OS_TICKS_PER_SEC/2);
+        delayed_resp_streamer = streamer_console_get();
     } else if(!strcmp(argv[1], "txcfg")) {
          /* uwbcfg txcfg 0xffff channel=5:prf=64:rx_sfdtype=1 */
         if (argc < 4) {
-            console_printf("pls provide: <addr> <cfg>\n");
+            streamer_printf(streamer, "pls provide: <addr> <cfg>\n");
             return 0;
         }
         uint16_t addr;
         addr = strtol(argv[2], NULL, 0);
-        console_printf(sending, addr);
-        struct os_mbuf *om = get_txcfg_mbuf(0, argv[3]);
+        streamer_printf(streamer, sending, addr);
+        struct os_mbuf *om = get_txcfg_mbuf(0, argv[3], streamer);
         if (!om) return 0;
         nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_NMGR_UWB);
+        delayed_resp_streamer = streamer;
         uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        os_time_delay(OS_TICKS_PER_SEC/2);
+        delayed_resp_streamer = streamer_console_get();
 
     } else {
         return -1;

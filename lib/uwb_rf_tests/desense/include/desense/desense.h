@@ -40,8 +40,7 @@ extern "C" {
 
 #include <uwb/uwb.h>
 #include <uwb/uwb_ftypes.h>
-
-typedef int (*desense_out_cb_t)(const char *fmt, ...);
+#include <streamer/streamer.h>
 
 //! Structure of desense test parameters
 struct desense_test_parameters {
@@ -118,8 +117,8 @@ int desense_listen(struct uwb_desense_instance * desense);
 int desense_txon(struct uwb_desense_instance * desense, uint16_t length, uint32_t delay_ns);
 int desense_txoff(struct uwb_desense_instance * desense);
 
-void desense_dump_data(struct uwb_desense_instance * desense, desense_out_cb_t cb);
-void desense_dump_stats(struct uwb_desense_instance * desense, desense_out_cb_t cb);
+void desense_dump_data(struct uwb_desense_instance * desense, struct streamer *streamer);
+void desense_dump_stats(struct uwb_desense_instance * desense, struct streamer *streamer);
 
 int desense_cli_register(void);
 int desense_cli_down(int reason);

@@ -34,13 +34,11 @@
 #include <shell/shell.h>
 #include <console/console.h>
 #include <console/ticks.h>
+#include <streamer/streamer.h>
 
 #include <desense/desense.h>
 
 #ifdef __KERNEL__
-#ifndef console_printf
-int console_printf(const char* fmt, ...) { return 0; }
-#endif
 void desense_sysfs_init(void);
 void desense_sysfs_deinit(void);
 void desense_debugfs_init(void);
@@ -48,7 +46,7 @@ void desense_debugfs_deinit(void);
 #endif
 
 #ifndef __KERNEL__
-static int desense_cli_cmd(int argc, char **argv);
+static int desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer);
 
 #if MYNEWT_VAL(SHELL_CMD_HELP)
 const struct shell_param cmd_desense_param[] = {
@@ -57,6 +55,7 @@ const struct shell_param cmd_desense_param[] = {
     {"set", "[variable] [value] update test parameters"},
     {"txon", "<inst> <data length> <delay_ns> Enable aggressor tx"},
     {"txoff", "Disable aggressor tx"},
+    {"res",  "<inst> show results"},
     {NULL,NULL},
 };
 
@@ -65,13 +64,7 @@ const struct shell_cmd_help cmd_desense_help = {
 };
 #endif
 
-static struct shell_cmd shell_desense_cmd = {
-    .sc_cmd = "desense",
-    .sc_cmd_func = desense_cli_cmd,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-    .help = &cmd_desense_help
-#endif
-};
+static struct shell_cmd shell_desense_cmd = SHELL_CMD_EXT("desense", desense_cli_cmd, &cmd_desense_help);
 
 static struct desense_test_parameters test_params = {
     .ms_start_delay = 1000,
@@ -85,27 +78,27 @@ static struct desense_test_parameters test_params = {
 };
 
 static void
-dump_params(struct desense_test_parameters *tp, desense_out_cb_t cb)
+dump_params(struct desense_test_parameters *tp, struct streamer *streamer)
 {
-    cb("Desense RF Test parameters:\n");
-    cb("  ms_start_delay      %6d\n", tp->ms_start_delay);
-    cb("  ms_test_delay       %6d\n", tp->ms_test_delay);
-    cb("  strong_coarse_power %6d\n", tp->strong_coarse_power);
-    cb("  strong_fine_power   %6d\n", tp->strong_fine_power);
-    cb("  n_strong            %6d\n", tp->n_strong);
-    cb("  test_coarse_power   %6d\n", tp->test_coarse_power);
-    cb("  test_fine_power     %6d\n", tp->test_fine_power);
-    cb("  n_test              %6d\n", tp->n_test);
+    streamer_printf(streamer, "Desense RF Test parameters:\n");
+    streamer_printf(streamer, "  ms_start_delay      %6d\n", tp->ms_start_delay);
+    streamer_printf(streamer, "  ms_test_delay       %6d\n", tp->ms_test_delay);
+    streamer_printf(streamer, "  strong_coarse_power %6d\n", tp->strong_coarse_power);
+    streamer_printf(streamer, "  strong_fine_power   %6d\n", tp->strong_fine_power);
+    streamer_printf(streamer, "  n_strong            %6d\n", tp->n_strong);
+    streamer_printf(streamer, "  test_coarse_power   %6d\n", tp->test_coarse_power);
+    streamer_printf(streamer, "  test_fine_power     %6d\n", tp->test_fine_power);
+    streamer_printf(streamer, "  n_test              %6d\n", tp->n_test);
 }
 
 static void
-desense_cli_too_few_args(void)
+desense_cli_too_few_args(struct streamer *streamer)
 {
-    console_printf("Too few args\n");
+    streamer_printf(streamer, "Too few args\n");
 }
 
 static int
-desense_cli_cmd(int argc, char **argv)
+desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer)
 {
     struct uwb_dev * dev = 0;
     struct uwb_desense_instance * desense = 0;
@@ -115,7 +108,7 @@ desense_cli_cmd(int argc, char **argv)
     uint32_t delay_ns, length;
 
     if (argc < 2) {
-        desense_cli_too_few_args();
+        desense_cli_too_few_args(streamer);
         return 0;
     }
 
@@ -127,19 +120,19 @@ desense_cli_cmd(int argc, char **argv)
         }
         dev = uwb_dev_idx_lookup(inst_n);
         if (!dev) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
         if (!desense) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense_listen(desense);
-        console_printf("Listening on 0x%04X\n", dev->my_short_address);
+        streamer_printf(streamer, "Listening on 0x%04X\n", dev->my_short_address);
     } else if (!strcmp(argv[1], "req")) {
         if (argc < 3) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         } else if (argc < 4) {
             inst_n = 0;
@@ -150,22 +143,22 @@ desense_cli_cmd(int argc, char **argv)
         }
         dev = uwb_dev_idx_lookup(inst_n);
         if (!dev) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
         if (!desense) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense_send_request(desense, addr, &test_params);
-        console_printf("request sent to 0x%04X\n", addr);
+        streamer_printf(streamer, "request sent to 0x%04X\n", addr);
     } else if (!strcmp(argv[1], "set")) {
         if (argc < 3) {
-            dump_params(&test_params, console_printf);
+            dump_params(&test_params, streamer);
             return 0;
         } else if (argc < 4) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         value = strtol(argv[3], NULL, 0);
@@ -177,11 +170,11 @@ desense_cli_cmd(int argc, char **argv)
         if (!strcmp(argv[2], "test_coarse_power"))   test_params.test_coarse_power = value;
         if (!strcmp(argv[2], "test_fine_power"))     test_params.test_fine_power = value;
         if (!strcmp(argv[2], "n_test"))              test_params.n_test = value;
-        dump_params(&test_params, console_printf);
+        dump_params(&test_params, streamer);
     } else if (!strcmp(argv[1], "txon")) {
         /*  desense txon <inst> <data length> <delay_ns>  */
         if (argc < 5) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         inst_n = strtol(argv[2], NULL, 0);
@@ -190,12 +183,12 @@ desense_cli_cmd(int argc, char **argv)
 
         dev = uwb_dev_idx_lookup(inst_n);
         if (!dev) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
         if (!desense) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
 
@@ -203,25 +196,45 @@ desense_cli_cmd(int argc, char **argv)
     } else if (!strcmp(argv[1], "txoff")) {
         /*  desense txoff <inst> */
         if (argc < 3) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         inst_n = strtol(argv[2], NULL, 0);
 
         dev = uwb_dev_idx_lookup(inst_n);
         if (!dev) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
         desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
         if (!desense) {
-            desense_cli_too_few_args();
+            desense_cli_too_few_args(streamer);
             return 0;
         }
 
         desense_txoff(desense);
+    } else if (!strcmp(argv[1], "res")) {
+        if (argc < 3) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+        inst_n = strtol(argv[2], NULL, 0);
+
+        dev = uwb_dev_idx_lookup(inst_n);
+        if (!dev) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+        desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
+        if (!desense) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+
+        desense_dump_data(desense, streamer);
+        desense_dump_stats(desense, streamer);
     } else {
-        console_printf("Unknown cmd\n");
+        streamer_printf(streamer, "Unknown cmd\n");
     }
 
     return 0;

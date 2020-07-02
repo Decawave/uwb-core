@@ -30,13 +30,14 @@
 
 #include <shell/shell.h>
 #include <console/console.h>
+#include <streamer/streamer.h>
 
 #include "uwb_rng/uwb_rng.h"
 #include "tofdb/tofdb.h"
 
 struct tofdb_node* tofdb_get_nodes();
 
-static int tofdb_cli_cmd(int argc, char **argv);
+static int tofdb_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer);
 
 #if MYNEWT_VAL(SHELL_CMD_HELP)
 const struct shell_param cmd_tofdb_param[] = {
@@ -49,41 +50,33 @@ const struct shell_cmd_help cmd_tofdb_help = {
 };
 #endif
 
-
-static struct shell_cmd shell_tofdb_cmd = {
-    .sc_cmd = "tdb",
-    .sc_cmd_func = tofdb_cli_cmd,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-    .help = &cmd_tofdb_help
-#endif
-};
-
+static struct shell_cmd shell_tofdb_cmd = SHELL_CMD_EXT("tdb", tofdb_cli_cmd, &cmd_tofdb_help);
 
 static void
-list_nodes()
+list_nodes(struct streamer *streamer)
 {
     int i;
     struct tofdb_node *nodes;
     struct os_timeval tv;
 
     nodes = tofdb_get_nodes();
-    console_printf("#idx, addr,    tof,  tof(m),    #,  stddev, age(s)\n");
+    streamer_printf(streamer, "#idx, addr,    tof,  tof(m),    #,  stddev, age(s)\n");
     for (i=0;i<MYNEWT_VAL(TOFDB_MAXNUM_NODES);i++) {
         if (!nodes[i].addr) {
             continue;
         }
-        console_printf("%4d, ", i);
-        console_printf("%4x, ", nodes[i].addr);
-        console_printf("%6ld, ", (uint32_t)nodes[i].tof);
+        streamer_printf(streamer, "%4d, ", i);
+        streamer_printf(streamer, "%4x, ", nodes[i].addr);
+        streamer_printf(streamer, "%6ld, ", (uint32_t)nodes[i].tof);
         float ave = nodes[i].tof;
         float stddev = uwb_rng_tof_to_meters((uint32_t)sqrtf(nodes[i].sum_sq/nodes[i].num - ave*ave));
         ave = uwb_rng_tof_to_meters((uint32_t)(nodes[i].sum/nodes[i].num));
-        console_printf("%3d.%03d, ", (int)ave, (int)(fabsf(ave-(int)ave)*1000));
-        console_printf("%4ld, ", nodes[i].num);
+        streamer_printf(streamer, "%3d.%03d, ", (int)ave, (int)(fabsf(ave-(int)ave)*1000));
+        streamer_printf(streamer, "%4ld, ", nodes[i].num);
         if (nodes[i].num>1) {
-            console_printf("%3d.%03d, ", (int)stddev, (int)(fabsf(stddev-(int)stddev)*1000));
+            streamer_printf(streamer, "%3d.%03d, ", (int)stddev, (int)(fabsf(stddev-(int)stddev)*1000));
         } else {
-            console_printf("%7s, ","");
+            streamer_printf(streamer, "%7s, ","");
         }
 
         if (nodes[i].last_updated) {
@@ -91,23 +84,23 @@ list_nodes()
             uint32_t age = os_cputime_ticks_to_usecs(os_cputime_get32() -
                                                      nodes[i].last_updated);
             uint32_t age_s = age/1000000;
-            console_printf("%4ld.%ld", age_s, (age-1000000*(age_s))/100000);
+            streamer_printf(streamer, "%4ld.%ld", age_s, (age-1000000*(age_s))/100000);
         }
-        console_printf("\n");
+        streamer_printf(streamer, "\n");
     }
 }
 
 
 static int
-tofdb_cli_cmd(int argc, char **argv)
+tofdb_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer)
 {
     if (argc < 2) {
         return 0;
     }
     if (!strcmp(argv[1], "list")) {
-        list_nodes();
+        list_nodes(streamer);
     } else {
-        console_printf("Unknown cmd\n");
+        streamer_printf(streamer, "Unknown cmd\n");
     }
     return 0;
 }

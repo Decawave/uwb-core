@@ -34,6 +34,7 @@
 #include <dpl/dpl_cputime.h>
 #include <hal/hal_spi.h>
 #include <hal/hal_gpio.h>
+#include <streamer/streamer.h>
 
 #include <stats/stats.h>
 #include <uwb/uwb.h>
@@ -264,18 +265,18 @@ reset_stats(struct uwb_desense_instance * desense)
  * @return void
  */
 void
-desense_dump_data(struct uwb_desense_instance * desense, desense_out_cb_t cb)
+desense_dump_data(struct uwb_desense_instance * desense, struct streamer *streamer)
 {
     int i;
     /* Dump packages */
     for (i=0;i<desense->test_log_idx;i++) {
-        cb("{\"idx\": %d, \"nth_pkt\": %"PRIu32", ",
+        streamer_printf(streamer, "{\"idx\": %d, \"nth_pkt\": %"PRIu32", ",
            i,
            desense->test_log[i].frame.test_nth_packet
             );
-        cb("\"rssi\": "DPL_FLOAT32_PRINTF_PRIM", ",
+        streamer_printf(streamer, "\"rssi\": "DPL_FLOAT32_PRINTF_PRIM", ",
            DPL_FLOAT32_PRINTF_VALS(desense->test_log[i].rssi));
-        cb("\"clko_ppm\": "DPL_FLOAT64_PRINTF_PRIM"}\n",
+        streamer_printf(streamer, "\"clko_ppm\": "DPL_FLOAT64_PRINTF_PRIM"}\n",
            DPL_FLOAT64_PRINTF_VALS(desense->test_log[i].clko));
     }
 }
@@ -290,7 +291,7 @@ desense_dump_data(struct uwb_desense_instance * desense, desense_out_cb_t cb)
  * @return void
  */
 void
-desense_dump_stats(struct uwb_desense_instance * desense, desense_out_cb_t cb)
+desense_dump_stats(struct uwb_desense_instance * desense, struct streamer *streamer)
 {
     int i;
     int32_t nom;
@@ -306,17 +307,17 @@ desense_dump_stats(struct uwb_desense_instance * desense, desense_out_cb_t cb)
         clko_sum = DPL_FLOAT64_ADD(clko_sum, desense->test_log[i].clko);
     }
 
-    cb("\n# Event counters:\n");
-    cb("  RXPHE:  %6d  # rx PHR err\n", cnt->ev0s.count_rxphe);
-    cb("  RXFSL:  %6d  # rx sync loss\n", cnt->ev0s.count_rxfsl);
-    cb("  RXFCG:  %6d  # rx CRC OK\n", cnt->ev1s.count_rxfcg);
-    cb("  RXFCE:  %6d  # rx CRC Errors\n", cnt->ev1s.count_rxfce);
-    cb("  ARFE:   %6d  # addr filt err\n", cnt->ev2s.count_arfe);
-    cb("  RXOVRR: %6d  # rx overflow\n", cnt->ev2s.count_rxovrr);
-    cb("  RXSTO:  %6d  # rx SFD TO\n", cnt->ev3s.count_rxsto);
-    cb("  RXPTO:  %6d  # pream search TO\n", cnt->ev3s.count_rxpto);
-    cb("  FWTO:   %6d  # rx frame wait TO\n", cnt->ev4s.count_fwto);
-    cb("  TXFRS:  %6d  # tx frames sent\n", cnt->ev4s.count_txfrs);
+    streamer_printf(streamer, "\n# Event counters:\n");
+    streamer_printf(streamer, "  RXPHE:  %6d  # rx PHR err\n", cnt->ev0s.count_rxphe);
+    streamer_printf(streamer, "  RXFSL:  %6d  # rx sync loss\n", cnt->ev0s.count_rxfsl);
+    streamer_printf(streamer, "  RXFCG:  %6d  # rx CRC OK\n", cnt->ev1s.count_rxfcg);
+    streamer_printf(streamer, "  RXFCE:  %6d  # rx CRC Errors\n", cnt->ev1s.count_rxfce);
+    streamer_printf(streamer, "  ARFE:   %6d  # addr filt err\n", cnt->ev2s.count_arfe);
+    streamer_printf(streamer, "  RXOVRR: %6d  # rx overflow\n", cnt->ev2s.count_rxovrr);
+    streamer_printf(streamer, "  RXSTO:  %6d  # rx SFD TO\n", cnt->ev3s.count_rxsto);
+    streamer_printf(streamer, "  RXPTO:  %6d  # pream search TO\n", cnt->ev3s.count_rxpto);
+    streamer_printf(streamer, "  FWTO:   %6d  # rx frame wait TO\n", cnt->ev4s.count_fwto);
+    streamer_printf(streamer, "  TXFRS:  %6d  # tx frames sent\n", cnt->ev4s.count_txfrs);
 
     nom = desense->req_frame.test_params.n_test - cnt->ev1s.count_rxfcg + 1;
     nomf64 = DPL_FLOAT64_I32_TO_F64(nom);
@@ -325,13 +326,13 @@ desense_dump_stats(struct uwb_desense_instance * desense, desense_out_cb_t cb)
         per = DPL_FLOAT64_DIV(nomf64, n_test);
     }
 
-    cb("\n  PER:  "DPL_FLOAT64_PRINTF_PRIM"\n", DPL_FLOAT64_PRINTF_VALS(per));
+    streamer_printf(streamer, "\n  PER:  "DPL_FLOAT64_PRINTF_PRIM"\n", DPL_FLOAT64_PRINTF_VALS(per));
     if (desense->test_log_idx) {
         rssi_sum = DPL_FLOAT32_DIV(rssi_sum, DPL_FLOAT32_I32_TO_F32(desense->test_log_idx));
         clko_sum = DPL_FLOAT64_DIV(clko_sum, DPL_FLOAT64_I32_TO_F64(desense->test_log_idx));
     }
-    cb("  RSSI: "DPL_FLOAT32_PRINTF_PRIM"  dBm\n", DPL_FLOAT32_PRINTF_VALS(rssi_sum));
-    cb("  CLKO: "DPL_FLOAT64_PRINTF_PRIM" ppm\n", DPL_FLOAT64_PRINTF_VALS(clko_sum));
+    streamer_printf(streamer, "  RSSI: "DPL_FLOAT32_PRINTF_PRIM"  dBm\n", DPL_FLOAT32_PRINTF_VALS(rssi_sum));
+    streamer_printf(streamer, "  CLKO: "DPL_FLOAT64_PRINTF_PRIM" ppm\n", DPL_FLOAT64_PRINTF_VALS(clko_sum));
 
 }
 
@@ -542,9 +543,9 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 /* Read event counters from device */
                 uwb_event_cnt_read(desense->dev_inst, &desense->evc);
 #ifndef __KERNEL__
-                printf("\n# Packets received:\n");
-                desense_dump_data(desense, printf);
-                desense_dump_stats(desense, printf);
+                streamer_printf(streamer_console_get(), "\n# Packets received:\n");
+                desense_dump_data(desense, streamer_console_get());
+                desense_dump_stats(desense, streamer_console_get());
 #endif
                 uwb_stop_rx(inst);
                 dpl_sem_release(&desense->sem);

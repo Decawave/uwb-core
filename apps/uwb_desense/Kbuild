@@ -20,3 +20,4 @@ uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense.o
 uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_cli.o
 uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_sysfs.o
 uwb_desense-y	+= ../../lib/uwb_rf_tests/desense/src/desense_debugfs.o
+uwb_desense-y	+= ../../porting/dpl_lib/src/streamer.o

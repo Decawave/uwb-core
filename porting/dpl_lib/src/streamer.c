@@ -17,6 +17,7 @@
  * under the License.
  */
 
+#include <dpl/dpl.h>
 #include <stdarg.h>
 #include "streamer/streamer.h"
 

@@ -32,11 +32,10 @@
 #include <bootutil/image.h>
 #include <flash_map/flash_map.h>
 #include <hal/hal_bsp.h>
-#include <console/console.h>
 
 #include <shell/shell.h>
 #include <console/console.h>
-
+#include <streamer/streamer.h>
 
 #include <tinycbor/cbor.h>
 #include <tinycbor/cborjson.h>
@@ -58,6 +57,18 @@
 #include <nmgr_uwb/nmgr_uwb.h>
 #endif
 static struct nmgr_transport nmgr_mstr_transport;
+
+static struct {
+    int8_t reset;
+    int8_t resend_end;
+    uint16_t addr;
+    int slot_id;
+    int blocksize;
+    struct os_callout callout;
+    uint64_t flags;
+    struct streamer *streamer;
+} tx_im_inst = {0};
+
 
 static uint16_t
 nmgr_mstr_get_mtu(struct os_mbuf *m)
@@ -93,12 +104,9 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
 
     g_err |= cbor_read_object(&cb->it, attrs);
     if (g_err) {
-        console_printf("gerr: '%d\n", g_err);
+        streamer_printf(tx_im_inst.streamer, "gerr: '%d\n", g_err);
     }
-    if (rc)
-    {
-        console_printf("nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
-    }
+    streamer_printf(tx_im_inst.streamer, "#nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
 
 #if MYNEWT_VAL(BCAST_OTA_DEBUG)
     printf("json:\n=========\n");
@@ -116,12 +124,12 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
     return (rc);
 }
 
-static int bota_cli_cmd(int argc, char **argv);
+static int bota_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer);
 
 #if MYNEWT_VAL(SHELL_CMD_HELP)
 const struct shell_param cmd_bota_param[] = {
     {"check", "<fa_id>"},
-    {"txim", "<addr> <fa_id>"},
+    {"txim", "<addr> <slot_id, 0 or 1>"},
     {"txrst", "<addr> tx reset cmd"},
     // {"txd", "<addr> <offset> <base64>"},
     {NULL,NULL},
@@ -133,17 +141,11 @@ const struct shell_cmd_help cmd_bota_help = {
 #endif
 
 
-static struct shell_cmd shell_bota_cmd = {
-    .sc_cmd = "bota",
-    .sc_cmd_func = bota_cli_cmd,
-#if MYNEWT_VAL(SHELL_CMD_HELP)
-    .help = &cmd_bota_help
-#endif
-};
+static struct shell_cmd shell_bota_cmd = SHELL_CMD_EXT("bota", bota_cli_cmd, &cmd_bota_help);
 
 #define TMPBUF_SZ  256
 static int
-check_image(const struct flash_area *fap)
+check_image(const struct flash_area *fap, struct streamer *streamer)
 {
     int rc;
     struct image_header hdr;
@@ -163,13 +165,13 @@ check_image(const struct flash_area *fap)
                                NULL, 0, hash);
     free(tmpbuf);
 
-    console_printf("computed hash: %s\n",
+    streamer_printf(streamer, "computed hash: %s\n",
                    hex_format(hash, IMGMGR_HASH_LEN, hash_str, sizeof(hash_str)));
     return rc;
 }
 
 int
-check_image_fid(int fid)
+check_image_fid(int fid, struct streamer *streamer)
 {
     int rc;
     const struct flash_area *fa;
@@ -178,20 +180,10 @@ check_image_fid(int fid)
     if (rc!=0) {
         return rc;
     }
-    rc = check_image(fa);
+    rc = check_image(fa, streamer);
     flash_area_close(fa);
     return rc;
 }
-
-static struct {
-    int8_t reset;
-    int8_t resend_end;
-    uint16_t addr;
-    int slot_id;
-    int blocksize;
-    struct os_callout callout;
-    uint64_t flags;
-} tx_im_inst = {0};
 
 static void
 txim_ev_cb(struct os_event *ev)
@@ -216,42 +208,43 @@ txim_ev_cb(struct os_event *ev)
         }
         tx_im_inst.resend_end = 5;
     } else if (--tx_im_inst.resend_end > 0){
-        printf("bota: resending end\n");
+        streamer_printf(tx_im_inst.streamer, "bota: resending end\n");
         bcast_ota_get_packet(tx_im_inst.slot_id, BCAST_MODE_RESEND_END,
                              (128-8), &om, tx_im_inst.flags);
         uwb_nmgr_queue_tx(nmgruwb, tx_im_inst.addr, UWB_DATA_CODE_NMGR_REQUEST, om);
         os_callout_reset(&tx_im_inst.callout, OS_TICKS_PER_SEC/4);
     } else {
-        printf("bota: txim finished\n");
+        streamer_printf(tx_im_inst.streamer, "bota: txim finished\n");
     }
 }
 
 static int
-bota_cli_cmd(int argc, char **argv)
+bota_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer *streamer)
 {
     int rc;
     int fa_id;
+    const char* too_few_args = "Too few args\n";
 
     if (argc < 2) {
-        console_printf("Too few args\n");
+        streamer_printf(streamer, too_few_args);
         return 0;
     }
     if (!strcmp(argv[1], "check")) {
         if (argc < 3) {
-            console_printf("pls provide fa id\n");
-            console_printf("  im0: %d\n", flash_area_id_from_image_slot(0));
-            console_printf("  im1: %d\n", flash_area_id_from_image_slot(1));
+            streamer_printf(streamer, too_few_args);
+            streamer_printf(streamer, "  im0: %d\n", flash_area_id_from_image_slot(0));
+            streamer_printf(streamer, "  im1: %d\n", flash_area_id_from_image_slot(1));
 #if MYNEWT_VAL(BCAST_OTA_SCRATCH_ENABLED)
-            console_printf("  lnota scratch: %d\n", MYNEWT_VAL(BCAST_OTA_FLASH_SCRATCH));
+            streamer_printf(streamer, "  bota scratch: %d\n", MYNEWT_VAL(BCAST_OTA_FLASH_SCRATCH));
 #endif
             return 0;
         }
         fa_id = strtol(argv[2], NULL, 0);
-        rc = check_image_fid(fa_id);
-        console_printf("rc=%d\n", rc);
+        rc = check_image_fid(fa_id, streamer);
+        streamer_printf(streamer, "rc=%d\n", rc);
     } else if (!strcmp(argv[1], "txim")) {
         if (argc < 4) {
-            console_printf("pls provide <addr> and slot src id [0 or 1]\n");
+            streamer_printf(streamer, too_few_args);
             return 0;
         }
         tx_im_inst.addr = strtol(argv[2], NULL, 0);
@@ -259,10 +252,13 @@ bota_cli_cmd(int argc, char **argv)
         tx_im_inst.slot_id = strtol(argv[3], NULL, 0);
         tx_im_inst.blocksize = 256;
         tx_im_inst.flags = BOTA_FLAGS_SET_PERMANENT;
+        /* Override streamer with console one */
+        tx_im_inst.streamer = streamer_console_get();
         os_callout_reset(&tx_im_inst.callout, 0);
+        streamer_printf(streamer, "txim slot %d to 0x%x\n", tx_im_inst.slot_id, tx_im_inst.addr);
     } else if (!strcmp(argv[1], "txrst")) {
         if (argc < 3) {
-            console_printf("pls provide <addr>\n");
+            streamer_printf(streamer, too_few_args);
             return 0;
         }
         uint16_t addr = strtol(argv[2], NULL, 0);
@@ -270,7 +266,7 @@ bota_cli_cmd(int argc, char **argv)
         nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
         uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
     } else {
-        console_printf("Unknown cmd\n");
+        streamer_printf(streamer, "Unknown cmd\n");
     }
     return 0;
 }

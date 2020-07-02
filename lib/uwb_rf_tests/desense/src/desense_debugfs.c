@@ -21,6 +21,7 @@
 
 #ifdef __KERNEL__
 #include <dpl/dpl.h>
+#include <streamer/streamer.h>
 #include <linux/fs.h>
 #include <linux/device.h>
 #include <linux/kernel.h>
@@ -40,19 +41,31 @@ static struct dentry *dir = 0;
 static struct seq_file *seq_file = 0;
 
 static int
-buffer_printf(const char *fmt, ...)
+debugfs_vprintf(struct streamer *streamer,
+                const char *fmt, va_list ap)
 {
-    va_list args;
-    if (!seq_file) {
-        slog("No seq_file");
-        return -1;
-    }
+    if (!seq_file) return -1;
 
-	va_start(args, fmt);
-	seq_vprintf(seq_file, fmt, args);
-	va_end(args);
+	seq_vprintf(seq_file, fmt, ap);
     return 0;
 }
+
+static int
+debugfs_write(struct streamer *streamer, const void *src, size_t len)
+{
+    if (!seq_file) return -1;
+    seq_write(seq_file, src, len);
+    return 0;
+}
+
+static const struct streamer_cfg streamer_cfg_debugfs = {
+    .write_cb = debugfs_write,
+    .vprintf_cb = debugfs_vprintf,
+};
+
+static struct streamer streamer_debugfs = {
+    .cfg = &streamer_cfg_debugfs,
+};
 
 static int cmd_dump(struct seq_file *s, void *data)
 {
@@ -62,11 +75,11 @@ static int cmd_dump(struct seq_file *s, void *data)
     slog("fn:%s", cmd->fn);
 
     if (!strcmp(cmd->fn, "data")) {
-        desense_dump_data(cmd->desense, buffer_printf);
+        desense_dump_data(cmd->desense, &streamer_debugfs);
     }
 
     if (!strcmp(cmd->fn, "stats")) {
-        desense_dump_stats(cmd->desense, buffer_printf);
+        desense_dump_stats(cmd->desense, &streamer_debugfs);
     }
 
     seq_file = 0;

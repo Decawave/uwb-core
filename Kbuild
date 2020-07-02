@@ -52,6 +52,7 @@ uwbcore-y	+= porting/dpl/kernel/src/stats.o
 uwbcore-y	+= porting/dpl/kernel/src/stats_sysfs.o
 uwbcore-y	+= porting/dpl_lib/src/dpl_mbuf.o
 uwbcore-y	+= porting/dpl_lib/src/dpl_mempool.o
+uwbcore-y	+= porting/dpl_lib/src/streamer.o
 uwbcore-y	+= hw/drivers/uwb/src/uwb.o
 uwbcore-y	+= lib/cir/src/cir.o
 uwbcore-y	+= lib/cir/src/cir_json.o

@@ -84,8 +84,13 @@ json_encode_value(struct json_encoder *encoder, struct json_value *jv)
             len = sprintf(encoder->je_encode_buf, "null");
         }else{
 #ifdef FLOAT_SUPPORT
-            len = sprintf(encoder->je_encode_buf, "%.4f",
-                    jv->jv_val.fl);
+            len = sprintf(encoder->je_encode_buf,
+#if MYNEWT_VAL(MCU_NATIVE)
+                          "%.3f", /* This is equivalent to Mynewt's float encoding */
+#else
+                          "%f",   /* Mynewt's printf cannot handle %.3f type encoding, only %f */
+#endif
+                          jv->jv_val.fl);
 #else
             len = sprintf(encoder->je_encode_buf, DPL_FLOAT64_PRINTF_PRIM,
                     DPL_FLOAT64_PRINTF_VALS(jv->jv_val.fl));

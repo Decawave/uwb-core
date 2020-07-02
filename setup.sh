@@ -43,7 +43,7 @@ echo " * Checking access to dw3000-c0 repository"
 if git clone git@github.com:Decawave/uwb-dw3000-c0 ${TESTCO} --depth 1 -q > /dev/null 2>&1; then
     echo "   - Access to dw3000-c0 OK"
     enable3kaccess
-    if [ ! -d decawave-uwb-dw3000-c0 ];then
+    if [ ! -d ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0 ];then
         echo "   - Checking out dw3000-c0 repository to ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0"
         git clone git@github.com:Decawave/uwb-dw3000-c0 ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0
     fi

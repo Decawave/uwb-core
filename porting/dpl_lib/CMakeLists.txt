@@ -11,6 +11,7 @@ file(GLOB ${PROJECT_NAME}_HEADERS
 
 include_directories(
     include
+    "${PROJECT_SOURCE_DIR}/../dpl_os/include"
     "${PROJECT_SOURCE_DIR}/../../bin/targets/syscfg/generated/include/"
 )
 

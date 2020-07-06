@@ -90,6 +90,7 @@ typedef enum _uwb_desense_state {
 struct uwb_desense_instance {
     struct uwb_dev * dev_inst;              //!< Structure of uwb_dev
     struct dpl_sem sem;                     //!< Semaphore indicating test in progress
+    uint8_t do_continuous_rx;               //!< Restart listen after finish for tag
 
     struct desense_request_frame req_frame; //!< Request frame
     struct desense_request_frame start_frame; //!< Start frame
@@ -116,6 +117,7 @@ int desense_send_request(struct uwb_desense_instance * desense, uint16_t dst_add
 int desense_listen(struct uwb_desense_instance * desense);
 int desense_txon(struct uwb_desense_instance * desense, uint16_t length, uint32_t delay_ns);
 int desense_txoff(struct uwb_desense_instance * desense);
+int desense_abort(struct uwb_desense_instance * desense);
 
 void desense_dump_data(struct uwb_desense_instance * desense, struct streamer *streamer);
 void desense_dump_stats(struct uwb_desense_instance * desense, struct streamer *streamer);

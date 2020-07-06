@@ -51,10 +51,12 @@ static int desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, s
 #if MYNEWT_VAL(SHELL_CMD_HELP)
 const struct shell_param cmd_desense_param[] = {
     {"rx",  "<inst> listen for request"},
+    {"rxc", "<inst> continuous listen for request"},
     {"req", "[inst] <addr> send request"},
     {"set", "[variable] [value] update test parameters"},
     {"txon", "<inst> <data length> <delay_ns> Enable aggressor tx"},
     {"txoff", "Disable aggressor tx"},
+    {"abort", "Abort ongoing operation"},
     {"res",  "<inst> show results"},
     {NULL,NULL},
 };
@@ -73,7 +75,7 @@ static struct desense_test_parameters test_params = {
     .strong_fine_power = 31,
     .n_strong = 5,
     .test_coarse_power = 3,
-    .test_fine_power = 9,
+    .test_fine_power = 16,
     .n_test = 100
 };
 
@@ -128,8 +130,28 @@ desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct strea
             desense_cli_too_few_args(streamer);
             return 0;
         }
+        desense->do_continuous_rx = 0;
         desense_listen(desense);
         streamer_printf(streamer, "Listening on 0x%04X\n", dev->my_short_address);
+    } else if (!strcmp(argv[1], "rxc")) {
+        if (argc < 3) {
+            inst_n=0;
+        } else {
+            inst_n = strtol(argv[2], NULL, 0);
+        }
+        dev = uwb_dev_idx_lookup(inst_n);
+        if (!dev) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+        desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
+        if (!desense) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+        desense->do_continuous_rx = 1;
+        desense_listen(desense);
+        streamer_printf(streamer, "Continuous listen on 0x%04X\n", dev->my_short_address);
     } else if (!strcmp(argv[1], "req")) {
         if (argc < 3) {
             desense_cli_too_few_args(streamer);
@@ -151,6 +173,7 @@ desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct strea
             desense_cli_too_few_args(streamer);
             return 0;
         }
+        desense_abort(desense);
         desense_send_request(desense, addr, &test_params);
         streamer_printf(streamer, "request sent to 0x%04X\n", addr);
     } else if (!strcmp(argv[1], "set")) {
@@ -213,6 +236,26 @@ desense_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct strea
         }
 
         desense_txoff(desense);
+    } else if (!strcmp(argv[1], "abort")) {
+        if (argc < 3) {
+            inst_n=0;
+        } else {
+            inst_n = strtol(argv[2], NULL, 0);
+        }
+        inst_n = strtol(argv[2], NULL, 0);
+
+        dev = uwb_dev_idx_lookup(inst_n);
+        if (!dev) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+        desense = (struct uwb_desense_instance*)uwb_mac_find_cb_inst_ptr(dev, UWBEXT_RF_DESENSE);
+        if (!desense) {
+            desense_cli_too_few_args(streamer);
+            return 0;
+        }
+
+        desense_abort(desense);
     } else if (!strcmp(argv[1], "res")) {
         if (argc < 3) {
             desense_cli_too_few_args(streamer);

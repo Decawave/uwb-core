@@ -406,6 +406,10 @@ callout_cb(struct dpl_event * ev)
         if(dpl_sem_get_count(&desense->sem) == 0){
             dpl_sem_release(&desense->sem);
         }
+        /* Restart rx if we're in continuous rx mode */
+        if (desense->do_continuous_rx) {
+            desense_listen(desense);
+        }
         break;
     }
     }
@@ -754,6 +758,36 @@ desense_listen(struct uwb_desense_instance * desense)
 }
 
 /**
+ * @fn desense_abort(struct uwb_desense_instance * desense)
+ * @brief Abort any current listening or request
+ *
+ * @param desense  Pointer to struct uwb_desense_instance
+ * @return int     0 if ok
+ */
+int
+desense_abort(struct uwb_desense_instance * desense)
+{
+    dpl_error_t err;
+    struct uwb_dev * inst = desense->dev_inst;
+
+    if(dpl_sem_get_count(&desense->sem) == 1) {
+        printf("%s:%d No ongoing operation\n", __func__, __LINE__);
+    }
+
+    desense->do_continuous_rx = 0;
+    uwb_phy_forcetrxoff(inst);
+    err = dpl_sem_pend(&desense->sem, dpl_time_ms_to_ticks32(1000));
+    if (err == DPL_TIMEOUT) {
+        printf("%s:%d Sem timeout, forceful release needed\n", __func__, __LINE__);
+    }
+    dpl_sem_release(&desense->sem);
+    desense->state = DESENSE_STATE_IDLE;
+    printf("%s:%d Aborted Ok\n", __func__, __LINE__);
+    return DPL_OK;
+}
+
+
+/**
  * @fn desense_txon(struct uwb_desense_instance * desense, uint16_t length, uint32_t delay_ns)
  * @brief Turn on aggressor transmission
  *
@@ -767,7 +801,14 @@ desense_txon(struct uwb_desense_instance * desense, uint16_t length, uint32_t de
 {
     int i, offs = 0;
     uint8_t buf[8] = {0};
+    dpl_error_t err;
     uint64_t delay_dtu;
+
+    err = dpl_sem_pend(&desense->sem, dpl_time_ms_to_ticks32(1000));
+    if (err == DPL_TIMEOUT) {
+        printf("%s:%d Sem timeout\n", __func__, __LINE__);
+        return DPL_TIMEOUT;
+    }
 
     /* Prepare data to send */
     for (i=0;i<length;i+=sizeof(buf)) {
@@ -805,6 +846,7 @@ int
 desense_txoff(struct uwb_desense_instance * desense)
 {
     uwb_phy_repeated_frames(desense->dev_inst, 0);
+    dpl_sem_release(&desense->sem);
     return DPL_OK;
 }
 

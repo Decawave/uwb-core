@@ -55,9 +55,11 @@ static struct desense_sysfs_data sysfs_inst[MYNEWT_VAL(UWB_DEVICE_MAX)] = {0};
 
 static const char* cmd_str[] = {
     "rx",
+    "rxc",
     "req",
     "txon",
     "txoff",
+    "abort",
     /* Return val from cmds */
     "ret",
 };
@@ -82,7 +84,17 @@ static ssize_t cmd_show(struct device *dev,
     struct desense_sysfs_data *ed = (struct desense_sysfs_data *)ext_dev->var;
 
     if (!strcmp(attr->attr.name, "rx")) {
-        copied = snprintf(buf, PAGE_SIZE, "Listening on 0x%04X\n", ed->desense->dev_inst->my_short_address);
+        copied = snprintf(buf, PAGE_SIZE, "%s 0x%04X\n",
+                          (ed->desense->state == DESENSE_STATE_RX) ? "Listening on" : "Waiting, addr:",
+                          ed->desense->dev_inst->my_short_address
+            );
+    }
+
+    if (!strcmp(attr->attr.name, "rxc")) {
+        copied = snprintf(buf, PAGE_SIZE, "%s 0x%04X\n",
+                          (ed->desense->state == DESENSE_STATE_RX) ? "Continuous listen on" : "Waiting, addr:",
+                          ed->desense->dev_inst->my_short_address
+            );
     }
 
     if (!strcmp(attr->attr.name, "ret")) {
@@ -137,8 +149,16 @@ static ssize_t cmd_store(struct device *dev,
     }
 
     if (!strcmp(attr->attr.name, "rx")) {
+        ed->desense->do_continuous_rx = 0;
         desense_listen(ed->desense);
         slog("Listening on 0x%04X\n", ed->desense->dev_inst->my_short_address);
+        ed->ret = 0;
+    }
+
+    if (!strcmp(attr->attr.name, "rxc")) {
+        ed->desense->do_continuous_rx = 1;
+        desense_listen(ed->desense);
+        slog("Continuous listen on 0x%04X\n", ed->desense->dev_inst->my_short_address);
         ed->ret = 0;
     }
 
@@ -157,7 +177,12 @@ static ssize_t cmd_store(struct device *dev,
 
     if (!strcmp(attr->attr.name, "txoff")) {
         desense_txoff(ed->desense);
-        slog("txoff issues");
+        slog("txoff issued");
+        ed->ret = 0;
+    }
+
+    if (!strcmp(attr->attr.name, "abort")) {
+        desense_abort(ed->desense);
         ed->ret = 0;
     }
 
@@ -228,7 +253,7 @@ void desense_sysfs_init(struct uwb_desense_instance *desense)
         .strong_fine_power = 31,
         .n_strong = 5,
         .test_coarse_power = 3,
-        .test_fine_power = 9,
+        .test_fine_power = 16,
         .n_test = 100
     };
     ed->txon_packet_length = 32;

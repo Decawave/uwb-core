@@ -390,7 +390,7 @@ mpu6500_init(struct os_dev *dev, void *arg)
         STATS_NAME_INIT_PARMS(mpu6500_stat_section));
     SYSINIT_PANIC_ASSERT(rc == 0);
     /* Register the entry with the stats registry */
-    rc = stats_register(dev->od_name, STATS_HDR(g_mpu6500stats));
+    rc = stats_register("mpu6500", STATS_HDR(g_mpu6500stats));
     SYSINIT_PANIC_ASSERT(rc == 0);
 
     rc = sensor_init(sensor, dev);

@@ -379,7 +379,7 @@ mpu6500_init(struct os_dev *dev, void *arg)
 
     mpu->cfg.mask = SENSOR_TYPE_ALL;
 
-    log_register(dev->od_name, &_log, &log_console_handler, NULL, LOG_SYSLEVEL);
+    log_register("mpu6500", &_log, &log_console_handler, NULL, LOG_SYSLEVEL);
 
     sensor = &mpu->sensor;
 

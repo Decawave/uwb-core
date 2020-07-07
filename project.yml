@@ -45,5 +45,5 @@ repository.decawave-uwb-dw1000:
 #3K     type: git                                         # 3KAccess Only
 #3K     vers: 0-dev                                       # 3KAccess Only
 #3K     user: decawave                                    # 3KAccess Only
-#3K     repo: uwb-dw3100-c0                               # 3KAccess Only
-#3K     url: 'git@github.com:Decawave/uwb-dw3100-c0.git'  # 3KAccess Only
+#3K     repo: uwb-dw3000-c0                               # 3KAccess Only
+#3K     url: 'git@github.com:Decawave/uwb-dw3000-c0.git'  # 3KAccess Only

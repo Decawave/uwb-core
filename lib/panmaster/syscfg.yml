@@ -16,13 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
 syscfg.defs:
+    PANMASTER_NODES_TO_SAVE:
+        description: 'Max number of nodes to save in panmaser'
+        value: 8
     PANMASTER_MAXNUM_NODES:
         description: 'Max number of nodes to support'
-        value: 128
-        restrictions:
-          - 'UWB_PAN_ENABLED'
+        value: 4
+        #restrictions:
+        #  - 'UWB_PAN_ENABLED'
     PANMASTER_SORT_AT_INIT:
         description: 'Sort database at startup'
         value: 1
@@ -67,7 +69,7 @@ syscfg.defs.PANMASTER_FCB:
     PANMASTER_FCB_FLASH_AREA:
         description: 'BSP flash area for panmaster nodes'
         type: 'flash_owner'
-        value:
+        value: FLASH_AREA_NFFS
     PANMASTER_FCB_MAGIC:
         description: 'Magic to identify valid panmaster area'
         value: 0xbaff0044

@@ -21,7 +21,8 @@
 #define _PANMASTER_H_
 
 #include <inttypes.h>
-#include <uwb_pan/uwb_pan_req.h>
+#include "pan_utils/pan_utils.h"
+#include "fcb/fcb.h"
 
 struct panmaster_node {
     int64_t  first_seen_utc; /*!< When this node was first seen */
@@ -68,6 +69,10 @@ typedef void (*panm_load_cb)(struct panmaster_node *node, void *cb_arg);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool panrequest_cb(uint64_t euid, struct pan_req_resp *request,
+                                                struct pan_req_resp *response);
+void postprocess_cb(struct dpl_event * ev);
 
 void panmaster_pkg_init(void);
 int panmaster_idx_find_node(uint64_t euid, uint16_t role, struct panmaster_node **node);

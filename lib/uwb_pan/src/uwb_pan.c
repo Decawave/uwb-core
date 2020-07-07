@@ -56,7 +56,7 @@
 
 //! Buffers for pan frames
 #if MYNEWT_VAL(UWB_DEVICE_0)
-static pan_frame_t g_pan_0[] = {
+static union pan_frame_t g_pan_0[] = {
     [0] = {
         .fctrl = FCNTL_IEEE_BLINK_TAG_64,    // frame control (FCNTL_IEEE_BLINK_64 to indicate a data frame using 16-bit addressing).
         .seq_num = 0x0,
@@ -67,7 +67,7 @@ static pan_frame_t g_pan_0[] = {
 };
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_1)
-static pan_frame_t g_pan_1[] = {
+static union pan_frame_t g_pan_1[] = {
     [0] = {
         .fctrl = FCNTL_IEEE_BLINK_TAG_64,    // frame control (FCNTL_IEEE_BLINK_64 to indicate a data frame using 16-bit addressing).
         .seq_num = 0x0,
@@ -78,7 +78,7 @@ static pan_frame_t g_pan_1[] = {
 };
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_2)
-static pan_frame_t g_pan_2[] = {
+static union pan_frame_t g_pan_2[] = {
     [0] = {
         .fctrl = FCNTL_IEEE_BLINK_TAG_64,    // frame control (FCNTL_IEEE_BLINK_64 to indicate a data frame using 16-bit addressing).
         .seq_num = 0x0,
@@ -89,23 +89,7 @@ static pan_frame_t g_pan_2[] = {
 };
 #endif
 
-#include <stats/stats.h>
-STATS_SECT_START(pan_stat_section)
-    STATS_SECT_ENTRY(pan_request)
-    STATS_SECT_ENTRY(pan_listen)
-    STATS_SECT_ENTRY(pan_reset)
-    STATS_SECT_ENTRY(relay_tx)
-    STATS_SECT_ENTRY(lease_expiry)
-    STATS_SECT_ENTRY(tx_complete)
-    STATS_SECT_ENTRY(rx_complete)
-    STATS_SECT_ENTRY(rx_unsolicited)
-    STATS_SECT_ENTRY(rx_other_frame)
-    STATS_SECT_ENTRY(rx_error)
-    STATS_SECT_ENTRY(tx_error)
-    STATS_SECT_ENTRY(rx_timeout)
-    STATS_SECT_ENTRY(reset)
-STATS_SECT_END
-
+STATS_SECT_DECL(pan_stat_section) g_stat;
 STATS_NAME_START(pan_stat_section)
     STATS_NAME(pan_stat_section, pan_request)
     STATS_NAME(pan_stat_section, pan_listen)
@@ -122,9 +106,7 @@ STATS_NAME_START(pan_stat_section)
     STATS_NAME(pan_stat_section, reset)
 STATS_NAME_END(pan_stat_section)
 
-static STATS_SECT_DECL(pan_stat_section) g_stat; //!< Stats instance
-
-static uwb_pan_config_t g_config = {
+static struct uwb_pan_config_t g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(UWB_PAN_TX_HOLDOFF),         // Send Time delay in usec.
     .rx_timeout_period = MYNEWT_VAL(UWB_PAN_RX_TIMEOUT),        // Receive response timeout in usec.
     .lease_time = MYNEWT_VAL(UWB_PAN_LEASE_TIME),               // Lease time in seconds
@@ -177,13 +159,13 @@ static struct uwb_mac_interface g_cbs[] = {
  * @return struct uwb_pan_instance
  */
 struct uwb_pan_instance *
-uwb_pan_init(struct uwb_dev * inst,  uwb_pan_config_t * config, uint16_t nframes)
+uwb_pan_init(struct uwb_dev * inst,  struct uwb_pan_config_t * config, uint16_t nframes)
 {
     assert(inst);
 
     struct uwb_pan_instance *pan = (struct uwb_pan_instance*)uwb_mac_find_cb_inst_ptr(inst, UWBEXT_PAN);
     if (pan == NULL ) {
-        pan = (struct uwb_pan_instance *) malloc(sizeof(struct uwb_pan_instance) + nframes * sizeof(pan_frame_t *));
+        pan = (struct uwb_pan_instance *) malloc(sizeof(struct uwb_pan_instance) + nframes * sizeof(union pan_frame_t *));
         assert(pan);
         memset(pan, 0, sizeof(struct uwb_pan_instance));
         pan->status.selfmalloc = 1;
@@ -192,7 +174,7 @@ uwb_pan_init(struct uwb_dev * inst,  uwb_pan_config_t * config, uint16_t nframes
 
     pan->dev_inst = inst;
     pan->config = config;
-    pan->control = (uwb_pan_control_t){0};
+    pan->control = (struct uwb_pan_control_t){0};
 
     dpl_error_t err = dpl_sem_init(&pan->sem, 0x1);
     assert(err == DPL_OK);
@@ -216,7 +198,7 @@ uwb_pan_init(struct uwb_dev * inst,  uwb_pan_config_t * config, uint16_t nframes
  * @return void
  */
 void
-uwb_pan_set_frames(struct uwb_pan_instance *pan, pan_frame_t pan_f[], uint16_t nframes)
+uwb_pan_set_frames(struct uwb_pan_instance *pan, union pan_frame_t pan_f[], uint16_t nframes)
 {
     assert(nframes <= pan->nframes);
     for (uint16_t i = 0; i < nframes; i++)
@@ -234,7 +216,7 @@ uwb_pan_pkg_init(void)
 {
     struct uwb_dev *udev;
     struct uwb_pan_instance *pan;
-    printf("{\"utime\": %lu,\"msg\": \"pan_pkg_init\"}\n", dpl_cputime_ticks_to_usecs(dpl_cputime_get32()));
+    printf("{\"utime\": %"PRIu32",\"msg\": \"pan_pkg_init\"}\n", dpl_cputime_ticks_to_usecs(dpl_cputime_get32()));
 
     dpl_error_t rc = stats_init(
         STATS_HDR(g_stat),
@@ -246,22 +228,22 @@ uwb_pan_pkg_init(void)
 
 #if MYNEWT_VAL(UWB_DEVICE_0)
     udev = uwb_dev_idx_lookup(0);
-    g_cbs[0].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_0)/sizeof(pan_frame_t));
-    uwb_pan_set_frames(pan, g_pan_0, sizeof(g_pan_0)/sizeof(pan_frame_t));
+    g_cbs[0].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_0)/sizeof(union pan_frame_t));
+    uwb_pan_set_frames(pan, g_pan_0, sizeof(g_pan_0)/sizeof(union pan_frame_t));
     uwb_mac_append_interface(udev, &g_cbs[0]);
     dpl_callout_init(&pan->pan_lease_callout_expiry, dpl_eventq_dflt_get(), lease_expiry_cb, (void *) pan);
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_1)
     udev = uwb_dev_idx_lookup(1);
-    g_cbs[1].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_1)/sizeof(pan_frame_t));
-    uwb_pan_set_frames(pan, g_pan_1, sizeof(g_pan_1)/sizeof(pan_frame_t));
+    g_cbs[1].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_1)/sizeof(union pan_frame_t));
+    uwb_pan_set_frames(pan, g_pan_1, sizeof(g_pan_1)/sizeof(union pan_frame_t));
     uwb_mac_append_interface(udev, &g_cbs[1]);
     dpl_callout_init(&pan->pan_lease_callout_expiry, dpl_eventq_dflt_get(), lease_expiry_cb, (void *) pan);
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_2)
     udev = uwb_dev_idx_lookup(2);
-    g_cbs[2].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_2)/sizeof(pan_frame_t));
-    uwb_pan_set_frames(pan, g_pan_2, sizeof(g_pan_2)/sizeof(pan_frame_t));
+    g_cbs[2].inst_ptr = pan = uwb_pan_init(udev, &g_config, sizeof(g_pan_2)/sizeof(union pan_frame_t));
+    uwb_pan_set_frames(pan, g_pan_2, sizeof(g_pan_2)/sizeof(union pan_frame_t));
     uwb_mac_append_interface(udev, &g_cbs[2]);
     dpl_callout_init(&pan->pan_lease_callout_expiry, dpl_eventq_dflt_get(), lease_expiry_cb, (void *) pan);
 #endif
@@ -288,41 +270,6 @@ uwb_pan_free(struct uwb_pan_instance *pan)
 }
 
 /**
- * @fn uwb_pan_set_request_cb(struct uwb_pan_instance * inst, uwb_pan_request_cb_func_t * callback)
- * @brief API to set request callback.
- *
- * @param inst       Pointer to struct uwb_pan_instance.
- * @param callback   Pointer uwb_pan_request_cb_func_t
- *
- * @return void
- */
-void
-uwb_pan_set_request_cb(struct uwb_pan_instance *pan, uwb_pan_request_cb_func_t callback)
-{
-    pan->request_cb = callback;
-    pan->control.request_cb = true;
-}
-
-/**
- * @fn uwb_pan_set_postprocess(struct uwb_dev * inst, dpl_event_fn * pan_postprocess)
- * @brief API to set pan_postprocess.
- *
- * @param inst              Pointer to struct uwb_dev.
- * @param pan_postprocess   Pointer to dpl_event_fn.
- *
- * @return void
- */
-void
-uwb_pan_set_postprocess(struct uwb_pan_instance *pan, dpl_event_fn * cb)
-{
-    dpl_event_init(&pan->postprocess_event, cb, (void *) pan);
-    dpl_callout_init(&pan->pan_lease_callout_expiry, dpl_eventq_dflt_get(),
-                    lease_expiry_cb, (void *) pan);
-
-    pan->control.postprocess = true;
-}
-
-/**
  * @fn pan_postprocess(struct dpl_event * ev)
  * @brief This a template which should be replaced by the pan_master by a event that tracks UUIDs
  * and allocated PANIDs and SLOTIDs.
@@ -340,7 +287,7 @@ pan_postprocess(struct dpl_event * ev){
 #if MYNEWT_VAL(UWB_PAN_VERBOSE)
     struct uwb_pan_instance * pan = (struct uwb_pan_instance *)ev->ev_arg;
     struct uwb_dev * inst = pan->dev_inst;
-    pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
+    union pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
     if(pan->status.valid && frame->long_address == inst->my_long_address)
         printf("{\"utime\": %lu,\"UUID\": \"%llX\",\"ID\": \"%X\",\"PANID\": \"%X\",\"slot\": %d}\n",
             dpl_cputime_ticks_to_usecs(dpl_cputime_get32()),
@@ -394,19 +341,19 @@ lease_expiry_cb(struct dpl_event * ev)
 
 
 static void
-handle_pan_request(struct uwb_pan_instance * pan, pan_frame_t * request)
+handle_pan_request(struct uwb_pan_instance * pan, union pan_frame_t * request)
 {
     if (!pan->request_cb) {
         return;
     }
 
-    pan_frame_t * response = pan->frames[(pan->idx)%pan->nframes];
+    union pan_frame_t * response = pan->frames[(pan->idx)%pan->nframes];
     response->code = DWT_PAN_RESP;
 
     if (pan->request_cb(request->long_address, &request->req, &response->req)) {
         uwb_set_wait4resp(pan->dev_inst, false);
-        uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
-        uwb_write_tx(pan->dev_inst, response->array, 0, sizeof(struct _pan_frame_t));
+        uwb_write_tx_fctrl(pan->dev_inst, sizeof(union pan_frame_t), 0);
+        uwb_write_tx(pan->dev_inst, response->array, 0, sizeof(union pan_frame_t));
         pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error;
     }
 }
@@ -443,10 +390,10 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
     }
 
     STATS_INC(g_stat, rx_complete);
-    pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
+    union pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
 
     /* Ignore frames that are too long */
-    if (inst->frame_len > sizeof(struct _pan_frame_t)) {
+    if (inst->frame_len > sizeof(union pan_frame_t)) {
         return false;
     }
     memcpy(frame->array, inst->rxbuf, inst->frame_len);
@@ -636,7 +583,7 @@ uwb_pan_listen(struct uwb_pan_instance * pan, uwb_dev_modes_t mode)
  *
  * @return uwb_pan_status_t
  */
-uwb_pan_status_t
+struct uwb_pan_status_t
 uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
                  uwb_dev_modes_t mode, uint64_t delay)
 {
@@ -644,7 +591,7 @@ uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
     assert(err == DPL_OK);
 
     STATS_INC(g_stat, pan_request);
-    pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
+    union pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
 
     frame->seq_num += pan->nframes;
     frame->long_address = pan->dev_inst->euid;
@@ -664,8 +611,8 @@ uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
 #endif
 
     uwb_set_delay_start(pan->dev_inst, delay);
-    uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
-    uwb_write_tx(pan->dev_inst, frame->array, 0, sizeof(struct _pan_frame_t));
+    uwb_write_tx_fctrl(pan->dev_inst, sizeof(union pan_frame_t), 0);
+    uwb_write_tx(pan->dev_inst, frame->array, 0, sizeof(union pan_frame_t));
     uwb_set_wait4resp(pan->dev_inst, true);
     uwb_set_rx_timeout(pan->dev_inst, pan->config->rx_timeout_period);
     pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error;
@@ -696,18 +643,18 @@ uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
  *
  * @return uwb_pan_status_t
  */
-uwb_pan_status_t
+struct uwb_pan_status_t
 uwb_pan_reset(struct uwb_pan_instance * pan, uint64_t delay)
 {
-    pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
+    union pan_frame_t * frame = pan->frames[(pan->idx)%pan->nframes];
 
     frame->seq_num += pan->nframes;
     frame->long_address = pan->dev_inst->euid;
     frame->code = DWT_PAN_RESET;
 
     uwb_set_delay_start(pan->dev_inst, delay);
-    uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
-    uwb_write_tx(pan->dev_inst, frame->array, 0, sizeof(struct _pan_frame_t));
+    uwb_write_tx_fctrl(pan->dev_inst, sizeof(union pan_frame_t), 0);
+    uwb_write_tx(pan->dev_inst, frame->array, 0, sizeof(union pan_frame_t));
     uwb_set_wait4resp(pan->dev_inst, false);
     pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error;
 
@@ -731,7 +678,7 @@ uwb_pan_reset(struct uwb_pan_instance * pan, uint64_t delay)
  * @return void
  */
 void
-uwb_pan_start(struct uwb_pan_instance * pan, uwb_pan_role_t role, network_role_t network_role)
+uwb_pan_start(struct uwb_pan_instance * pan, enum uwb_pan_role_t role, network_role_t network_role)
 {
     pan->config->role = role;
     pan->config->network_role = network_role;
@@ -812,7 +759,7 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
                 timeout = 3*ccp->period/tdma->nslots/4;
             } else {
                 /* Only listen long enough to get any resets from master */
-                timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)))
+                timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(union pan_frame_t)))
                     + MYNEWT_VAL(XTALT_GUARD);
             }
             uwb_set_rx_timeout(tdma->dev_inst, timeout);

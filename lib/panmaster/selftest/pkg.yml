@@ -17,29 +17,34 @@
 # under the License.
 #
 
-pkg.name: lib/uwb_pan
-pkg.description: Private Area Network management, address and slot control.
-pkg.author: "UWB Core <uwbcore@gmail.com>"
+pkg.name: lib/panmaster/selftest
+pkg.type: unittest
+pkg.description: Panmaster tests
+pkg.author: "Szymon Czapracki <szymon.czapracki@codecoup.pl>"
 pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
-    - uwb
-    - pan
-
-pkg.deps:
-    - "@decawave-uwb-core/hw/drivers/uwb"
-    - "@decawave-uwb-core/lib/pan_utils"
-
-pkg.deps.UWB_PAN_VERSION_ENABLED:
-    - "@apache-mynewt-core/mgmt/imgmgr"
+    - panmaster
 
 pkg.cflags:
-    - "-std=gnu11"
+    - "-std=gnu99"
     - "-fms-extensions"
 
 pkg.lflags:
     - "-lm"
-pkg.init:
-    uwb_pan_pkg_init: 404
+
+pkg.deps:
+    - "@decawave-uwb-core/porting/dpl/mynewt"
+    - "@decawave-uwb-core/hw/drivers/uwb"
+    - "@decawave-uwb-core/lib/panmaster"
+    - "@apache-mynewt-core/test/testutil"
+    - "@apache-mynewt-core/encoding/cborattr"
+    - "@mcuboot/boot/bootutil"
+    - "@apache-mynewt-core/sys/stats/full"
+
+pkg.apis:
+  - bootloader
+  - newtmgr
 
 pkg.apis:
   - "UWB_HW_IMPL"
+

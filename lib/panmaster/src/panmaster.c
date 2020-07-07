@@ -12,12 +12,11 @@
 
 #if MYNEWT_VAL(UWB_PAN_ENABLED)
 #include <uwb_pan/uwb_pan.h>
-#include <uwb_pan/uwb_pan_req.h>
 #endif
 
 static struct panmaster_node_idx node_idx[MYNEWT_VAL(PANMASTER_MAXNUM_NODES)];
 static struct dpl_mutex save_mutex;
-static struct panmaster_node nodes_to_save[4];
+static struct panmaster_node nodes_to_save[MYNEWT_VAL(PANMASTER_NODES_TO_SAVE)];
 
 static uint16_t pan_id = 0x0000;
 static volatile int nodes_loaded = 0;
@@ -137,10 +136,9 @@ panm_init_fcb(void)
 }
 #endif
 
-#if MYNEWT_VAL(UWB_PAN_ENABLED)
-static bool
+bool
 panrequest_cb(uint64_t euid, struct pan_req_resp *request,
-              struct pan_req_resp *response)
+                                                struct pan_req_resp *response)
 {
     struct dpl_timeval tv;
     struct panmaster_node *node = 0;
@@ -149,6 +147,7 @@ panrequest_cb(uint64_t euid, struct pan_req_resp *request,
     if (!node) {
         return false;
     }
+
     /* Copy the fw_version before overwriting the union */
     memcpy(&node->fw_ver, &request->fw_ver, sizeof(struct pan_image_version));
 
@@ -173,6 +172,7 @@ panmaster_postprocess(void)
 {
     int i, slots;
     struct panmaster_node node;
+
     if (dpl_mutex_pend(&save_mutex, DPL_WAIT_FOREVER) != DPL_OK) {
         return;
     }
@@ -182,7 +182,6 @@ panmaster_postprocess(void)
             /* Take a tmp copy of this entry and save */
             memcpy(&node, &nodes_to_save[i], sizeof(node));
             dpl_mutex_release(&save_mutex);
-            // printf("[%d] saving node with euid %llx\n", i, node.euid);
             panmaster_update_node(node.euid, &node);
             if (dpl_mutex_pend(&save_mutex, DPL_WAIT_FOREVER) != DPL_OK) {
                 return;
@@ -194,7 +193,7 @@ panmaster_postprocess(void)
     dpl_mutex_release(&save_mutex);
 }
 
-static void
+void
 postprocess_cb(struct dpl_event * ev)
 {
     assert(ev != NULL);
@@ -207,8 +206,6 @@ postprocess_cb(struct dpl_event * ev)
     }
     panmaster_postprocess();
 }
-
-#endif  /* PAN_ENABLED */
 
 void
 panmaster_node_idx(struct panmaster_node_idx **node_idx_arg, int *num_nodes)

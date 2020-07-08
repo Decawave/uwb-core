@@ -35,15 +35,6 @@ extern "C" {
 #define DPL_OS_ALIGNMENT (DPL_ALIGNMENT)
 
 //#define SYSINIT_PANIC_MSG(msg) __assert_fail(msg, __FILE__, __LINE__, __func__)
-#ifndef SYSINIT_PANIC_ASSERT_MSG
-#define SYSINIT_PANIC_ASSERT_MSG(rc, msg) do \
-{                                            \
-    if (!(rc)) {                             \
-        SYSINIT_PANIC_MSG(msg);              \
-    }                                        \
-} while (0)
-#endif
-
 #define DPL_ALIGN(__n, __a) (                             \
         (((__n) & ((__a) - 1)) == 0)                   ? \
             (__n)                                      : \

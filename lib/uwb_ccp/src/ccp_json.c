@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+#include <syscfg/syscfg.h>
+
+#if MYNEWT_VAL(UWB_CCP_VERBOSE)
 #include <uwb_ccp/ccp_json.h>
 
 
@@ -281,3 +284,4 @@ ccp_json_read_uint64(ccp_json_t * json, char * line){
 
     return rc;
 }
+#endif // UWB_CCP_VERBOSE

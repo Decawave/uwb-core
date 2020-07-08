@@ -204,7 +204,8 @@ wcs_timescale_ev(struct dpl_event * ev)
         .wcs = {states->time, states->skew, states->drift},
         .ppm = DPL_FLOAT64_MUL(wcs->fractional_skew, DPL_FLOAT64_INIT(1e6l))
     };
-    wcs_json_write_uint64(&json);
+    wcs_json_write(&json);
+    printf("%s\n", json.iobuf);
 #endif
     }
 }

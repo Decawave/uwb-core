@@ -23,9 +23,7 @@
 #include <math.h>
 #include <dpl/dpl_types.h>
 #include <dpl/dpl_cputime.h>
-#include <json/json.h>
 #include <uwb_rng/uwb_rng.h>
-#include <uwb_rng/rng_json.h>
 #include <uwb_rng/rng_encode.h>
 
 #if MYNEWT_VAL(UWB_WCS_ENABLED)
@@ -37,6 +35,8 @@ int rng_encode_output(int idx, char *buf, size_t len);
 #endif
 
 #if MYNEWT_VAL(RNG_VERBOSE)
+#include <json/json.h>
+#include <uwb_rng/rng_json.h>
 /*!
  * @fn rng_encode(struct uwb_rng_instance * rng)
  *

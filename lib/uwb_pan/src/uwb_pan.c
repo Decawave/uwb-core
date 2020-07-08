@@ -19,7 +19,7 @@
 
 /**
  * @file uwb_pan.c
- * @autjor paul kettle
+ * @author UWB Core <uwbcore@gmail.com>
  * @date 2018
  * @brief Personal Area Network
  *

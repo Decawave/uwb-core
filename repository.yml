@@ -32,7 +32,7 @@ repo.newt_compatibility:
     0.0.0:
         0.0.0: good
     0.1.0:
-        1.7.0: good
+        1.8.0: good
 
 repo.deps:
     apache-mynewt-core:
@@ -40,8 +40,8 @@ repo.deps:
         user: apache
         repo: mynewt-core
         vers:
-            master: 1.7.0
-            uwb_core_0_1_0_tag: 1.7.0
+            master: 1.8.0
+            uwb_core_0_1_0_tag: 1.8.0
 
     decawave-uwb-dw1000:
         type: git

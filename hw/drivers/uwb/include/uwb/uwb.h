@@ -330,6 +330,13 @@ struct uwb_dev_config{
     uint32_t blocking_spi_transfers:1;      //!< Disables non-blocking reads and writes
 };
 
+//! TX fctrl extended parameters
+struct uwb_fctrl_ext {
+    uint8_t dataRate;
+    uint8_t preambleLength;
+    uint8_t ranging_en_bit;
+};
+
 /**
  * Configure the mac layer
  * @param inst     Pointer to struct uwb_dev.
@@ -555,10 +562,23 @@ typedef struct uwb_dev_status (*uwb_write_tx_func_t)(struct uwb_dev* dev, uint8_
  * @param dev               Pointer to struct uwb_dev.
  * @param tx_frame_length   This is the length of TX message (excluding the 2 byte CRC) - max is 1023
  *                          NOTE: standard PHR mode allows up to 127 bytes.
- * @param tx_buffer_offset  The offset in the tx buffer to start writing the data.
+ * @param tx_buffer_offset  The offset in the tx buffer to send data from.
  * @return void
  */
 typedef void (*uwb_write_tx_fctrl_func_t)(struct uwb_dev* dev, uint16_t tx_frame_length, uint16_t tx_buffer_offset);
+
+/**
+ * Configure the TX frame control register before the transmission of a frame with extended options.
+ *
+ * @param dev               Pointer to struct uwb_dev.
+ * @param tx_frame_length   This is the length of TX message (excluding the 2 byte CRC) - max is 1023
+ *                          NOTE: standard PHR mode allows up to 127 bytes.
+ * @param tx_buffer_offset  The offset in the tx buffer to send data from.
+ * @param ext               Optional pointer to struct uwb_fctrl_ext with additional parameters
+ * @return void
+ */
+typedef void (*uwb_write_tx_fctrl_ext_func_t)(struct uwb_dev* dev, uint16_t tx_frame_length,
+                                              uint16_t tx_buffer_offset, struct uwb_fctrl_ext *ext);
 
 /**
  * Wait for a DMA transfer
@@ -936,7 +956,8 @@ struct uwb_driver_funcs {
     uwb_start_rx_func_t uf_start_rx;
     uwb_stop_rx_func_t uf_stop_rx;
     uwb_write_tx_func_t uf_write_tx;
-    uwb_write_tx_fctrl_func_t uf_write_tx_fctrl;
+    /* uwb_write_tx_fctrl_func_t uf_write_tx_fctrl; Replaced by below */
+    uwb_write_tx_fctrl_ext_func_t uf_write_tx_fctrl_ext;
     uwb_hal_noblock_wait_func_t uf_hal_noblock_wait;
     uwb_tx_wait_func_t uf_tx_wait;
     uwb_set_wait4resp_func_t uf_set_wait4resp;
@@ -1068,6 +1089,7 @@ struct uwb_dev {
     struct uwb_dev_status uwb_stop_rx(struct uwb_dev *dev);
     struct uwb_dev_status uwb_write_tx(struct uwb_dev* dev, uint8_t *tx_frame_bytes, uint16_t tx_buffer_offset, uint16_t tx_frame_length);
     void uwb_write_tx_fctrl(struct uwb_dev* dev, uint16_t tx_frame_length, uint16_t tx_buffer_offset);
+    void uwb_write_tx_fctrl_ext(struct uwb_dev* dev, uint16_t tx_frame_length, uint16_t tx_buffer_offset, struct uwb_fctrl_ext *ext);
     int uwb_hal_noblock_wait(struct uwb_dev * dev, uint32_t timeout);
     int uwb_tx_wait(struct uwb_dev * dev, uint32_t timeout);
     struct uwb_dev_status uwb_set_wait4resp(struct uwb_dev *dev, bool enable);

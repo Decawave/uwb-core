@@ -341,9 +341,27 @@ EXPORT_SYMBOL(uwb_write_tx);
 UWB_API_IMPL_PREFIX void
 uwb_write_tx_fctrl(struct uwb_dev* dev, uint16_t tx_frame_length, uint16_t tx_buffer_offset)
 {
-    return (dev->uw_funcs->uf_write_tx_fctrl(dev, tx_frame_length, tx_buffer_offset));
+    return (dev->uw_funcs->uf_write_tx_fctrl_ext(dev, tx_frame_length, tx_buffer_offset, 0));
 }
 EXPORT_SYMBOL(uwb_write_tx_fctrl);
+
+/**
+ * Configure the TX frame control register before the transmission of a frame with extended options.
+ *
+ * @param dev               Pointer to struct uwb_dev.
+ * @param tx_frame_length   This is the length of TX message (excluding the 2 byte CRC) - max is 1023
+ *                          NOTE: standard PHR mode allows up to 127 bytes.
+ * @param tx_buffer_offset  The offset in the tx buffer to send data from.
+ * @param ext               Optional pointer to struct uwb_fctrl_ext with additional parameters
+ * @return void
+ */
+UWB_API_IMPL_PREFIX void
+uwb_write_tx_fctrl_ext(struct uwb_dev* dev, uint16_t tx_frame_length,
+                       uint16_t tx_buffer_offset, struct uwb_fctrl_ext *ext)
+{
+    return (dev->uw_funcs->uf_write_tx_fctrl_ext(dev, tx_frame_length, tx_buffer_offset, ext));
+}
+EXPORT_SYMBOL(uwb_write_tx_fctrl_ext);
 
 /**
  * Wait for a DMA transfer

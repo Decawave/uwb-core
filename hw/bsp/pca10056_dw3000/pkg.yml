@@ -35,9 +35,9 @@ pkg.cflags.HARDFLOAT:
     - -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 pkg.deps.DW3000_DEVICE_0:
-    - "@decawave-uwb-dw3100-c0/hw/drivers/uwb/uwb_dw3100-c0"
+    - "@decawave-uwb-dw3000-c0/hw/drivers/uwb/uwb_dw3000-c0"
 pkg.deps.CIR_ENABLED:
-    - '@decawave-uwb-dw3100-c0/lib/cir/cir_dw3100-c0'
+    - '@decawave-uwb-dw3000-c0/lib/cir/cir_dw3000-c0'
 
 pkg.deps:
     - "@apache-mynewt-core/hw/mcu/nordic/nrf52xxx"

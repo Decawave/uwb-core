@@ -18,7 +18,7 @@ make -f Makefile.cmake kernel-prereq
 
 ### As An In-Kernel Driver:
 - Place contents in <kernel-src>/driver/misc/uwbcore
-- Also include the specific drivers needed from separate repos (decawave-uwb-dw1000, decawave-uwb-dw3100-c0,...)
+- Also include the specific drivers needed from separate repos (decawave-uwb-dw1000, decawave-uwb-dw3000-c0,...)
 - Add `CONFIG_UWB_DW1000=y` to config.
 - Add `CONFIG_UWB_DW3000=y` to config.
 - Add `CONFIG_UWB_CORE=y` (or m) to config.

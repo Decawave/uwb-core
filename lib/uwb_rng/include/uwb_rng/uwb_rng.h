@@ -77,6 +77,7 @@ struct uwb_rng_config{
 //! Range control parameters.
 typedef struct _uwb_rng_control_t{
     uint16_t delay_start_enabled:1;  //!< Set for enabling delayed start
+    uint16_t complete_after_tx:1;    //!< Set by ranging state machine to say that exchange is complete after next tx
 }uwb_rng_control_t;
 
 //! Range status parameters
@@ -188,6 +189,7 @@ void uwb_rng_clear_twr_data(struct _twr_data_t *s);
 dpl_float64_t uwb_rng_twr_to_tof(struct uwb_rng_instance * rng, uint16_t idx);
 dpl_float64_t uwb_rng_tof_to_meters(dpl_float64_t ToF);
 void uwb_rng_calc_rel_tx(struct uwb_rng_instance * rng, struct uwb_rng_txd *ret, struct uwb_rng_config *cfg, uint64_t ts, uint16_t rx_data_len);
+void rng_issue_complete(struct uwb_dev * inst);
 
 #ifndef __KERNEL__
 float uwb_rng_path_loss(float Pt, float G, float fc, float R);

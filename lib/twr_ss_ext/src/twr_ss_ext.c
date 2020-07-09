@@ -285,17 +285,12 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 if (uwb_start_tx(inst).start_tx_error){
                     STATS_INC(g_twr_ss_ext_stat, tx_error);
+                    dpl_sem_release(&rng->sem);
+                    rng_issue_complete(inst);
                 }
                 else{
                     STATS_INC(g_twr_ss_ext_stat, complete);
-                }
-
-                dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
+                    rng->control.complete_after_tx = 1;
                 }
                 break;
             }
@@ -308,12 +303,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 STATS_INC(g_twr_ss_ext_stat, complete);
                 dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                rng_issue_complete(inst);
                 break;
             }
         default:

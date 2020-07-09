@@ -870,6 +870,26 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 }
 
 /**
+ * @fn rng_issue_complete(struct uwb_dev * inst)
+ * @brief Calls all complete_cb present in the struct uwb_mac_interface list
+ *
+ * @param inst  Pointer to struct uwb_dev.
+ *
+ * @return void
+ */
+void
+rng_issue_complete(struct uwb_dev * inst)
+{
+    struct uwb_mac_interface * cbs_i;
+    if(!(SLIST_EMPTY(&inst->interface_cbs))) {
+        SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
+            if (cbs_i != NULL && cbs_i->complete_cb)
+                if(cbs_i->complete_cb(inst, cbs_i)) continue;
+        }
+    }
+}
+
+/**
  * @fn tx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
  * @brief API for transmission complete callback.
  *
@@ -893,6 +913,11 @@ tx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
     switch(rng->code) {
         case UWB_DATA_CODE_SS_TWR ... UWB_DATA_CODE_DS_TWR_EXT_END:
             RNG_STATS_INC(tx_complete);
+            if (rng->control.complete_after_tx) {
+                dpl_sem_release(&rng->sem);
+                rng_issue_complete(inst);
+            }
+            rng->control.complete_after_tx = 0;
             return true;
             break;
         default:

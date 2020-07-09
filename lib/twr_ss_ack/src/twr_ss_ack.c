@@ -216,7 +216,6 @@ static bool
 rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
     twr_frame_t * frame;
-    struct uwb_mac_interface * cbs_i;
     if (inst->fctrl != FCNTL_IEEE_RANGE_16 &&
         inst->fctrl != (FCNTL_IEEE_RANGE_16|UWB_FCTRL_ACK_REQUESTED) &&
         inst->fctrl != UWB_FCTRL_FRAME_TYPE_ACK) {
@@ -316,20 +315,15 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_write_tx(inst, frame->array, 0,  sizeof(twr_frame_final_t));
                 uwb_write_tx_fctrl(inst, sizeof(twr_frame_final_t), 0);
 
-                if (uwb_start_tx(inst).start_tx_error){
+                if (uwb_start_tx(inst).start_tx_error) {
                     SS_STATS_INC(tx_error);
-                }
-                else{
+                    dpl_sem_release(&rng->sem);
+                    rng_issue_complete(inst);
+                } else {
                     SS_STATS_INC(complete);
+                    rng->control.complete_after_tx = 1;
                 }
-
-                dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                break;
                 break;
             }
         case UWB_DATA_CODE_SS_TWR_ACK_FINAL:
@@ -342,12 +336,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 SS_STATS_INC(complete);
                 dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                rng_issue_complete(inst);
                 break;
             }
         default:

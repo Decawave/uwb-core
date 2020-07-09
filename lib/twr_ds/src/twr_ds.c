@@ -187,7 +187,6 @@ static bool
 rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
     struct uwb_rng_txd txd;
-    struct uwb_mac_interface * cbs_i;
     if (inst->fctrl != FCNTL_IEEE_RANGE_16)
         return false;
 
@@ -337,20 +336,15 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_rng_calc_rel_tx(rng, &txd, &g_config, inst->rxtimestamp, inst->frame_len);
                 uwb_set_delay_start(inst, txd.response_tx_delay);
 
-                if (uwb_start_tx(inst).start_tx_error){
+                if (uwb_start_tx(inst).start_tx_error) {
                     STATS_INC(g_twr_ds_stat, start_tx_error);
-                }
-                else{
+                    dpl_sem_release(&rng->sem);
+                    rng_issue_complete(inst);
+                } else {
                     STATS_INC(g_twr_ds_stat, complete);
+                    rng->control.complete_after_tx = 1;
                 }
 
-                dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
                 break;
             }
         case  UWB_DATA_CODE_DS_TWR_FINAL:
@@ -360,12 +354,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 STATS_INC(g_twr_ds_stat, complete);
                 dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                rng_issue_complete(inst);
                 break;
             }
         default:

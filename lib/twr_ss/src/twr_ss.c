@@ -197,7 +197,6 @@ static bool
 rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
     twr_frame_t * frame;
-    struct uwb_mac_interface * cbs_i;
     struct uwb_rng_instance * rng = (struct uwb_rng_instance *)cbs->inst_ptr;
     if (inst->fctrl != FCNTL_IEEE_RANGE_16)
         return false;
@@ -289,16 +288,11 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 if (uwb_start_tx(inst).start_tx_error) {
                     SS_STATS_INC(tx_error);
+                    dpl_sem_release(&rng->sem);
+                    rng_issue_complete(inst);
                 } else {
                     SS_STATS_INC(complete);
-                }
-
-                dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
+                    rng->control.complete_after_tx = 1;
                 }
                 break;
             }
@@ -312,12 +306,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 SS_STATS_INC(complete);
                 dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i != NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                rng_issue_complete(inst);
                 break;
             }
         default:

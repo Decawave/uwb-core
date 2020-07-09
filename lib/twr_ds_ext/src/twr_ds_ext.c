@@ -343,23 +343,17 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_rng_calc_rel_tx(rng, &txd, &g_config, inst->rxtimestamp, inst->frame_len);
                 uwb_set_delay_start(inst, txd.response_tx_delay);
 
-                if (uwb_start_tx(inst).start_tx_error) {
-                    STATS_INC(g_twr_ds_ext_stat, tx_error);
-                }else{
-                    STATS_INC(g_twr_ds_ext_stat, complete);
-                }
-
-                dpl_sem_release(&rng->sem);
-
                 /* Remove the remote data so local node doesn't think they've been received */
                 memcpy(&frame->local, &frame->remote, sizeof(frame->local));
                 uwb_rng_clear_twr_data(&frame->remote);
 
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i!=NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
+                if (uwb_start_tx(inst).start_tx_error) {
+                    STATS_INC(g_twr_ds_ext_stat, tx_error);
+                    dpl_sem_release(&rng->sem);
+                    rng_issue_complete(inst);
+                }else{
+                    STATS_INC(g_twr_ds_ext_stat, complete);
+                    rng->control.complete_after_tx = 1;
                 }
                 break;
             }
@@ -370,12 +364,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 
                 STATS_INC(g_twr_ds_ext_stat, complete);
                 dpl_sem_release(&rng->sem);
-                if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                    SLIST_FOREACH(cbs_i, &inst->interface_cbs, next) {
-                        if (cbs_i!=NULL && cbs_i->complete_cb)
-                            if(cbs_i->complete_cb(inst, cbs_i)) continue;
-                    }
-                }
+                rng_issue_complete(inst);
                 break;
             }
         default:

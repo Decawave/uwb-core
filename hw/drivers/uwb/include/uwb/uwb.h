@@ -543,14 +543,17 @@ typedef struct uwb_dev_status (*uwb_stop_rx_func_t)(struct uwb_dev *dev);
  * TX buffer.The input parameters are the data length in bytes and a pointer
  * to those data bytes.
  *
- ***** NIKLAS TODO: This text should be fixed, no need to mention CRC bytes here?
  * Note: This is the length of TX message (including the 2 byte CRC) - max is 1023 standard PHR mode allows up to 127 bytes
  * if > 127 is programmed, DWT_PHRMODE_EXT needs to be set in the phrMode configuration.
  *
  * @param dev                 Pointer to uwb_dev.
  * @param tx_frame_bytes      Pointer to the user buffer containing the data to send.
  * @param tx_buffer_offset    This specifies an offset in the tranceiver's TX Buffer where writing of data starts.
- * @param tx_frame_length     This is the total frame length, including the two byte CRC.
+ * @param tx_frame_length     This is the length of TX message, excluding the two byte CRC when auto-FCS
+ *                            transmission is enabled.
+ *                            In standard PHR mode, maximum is 127 (125 with auto-FCS Transmission).
+ *                            With DWT_PHRMODE_EXT set in the phrMode configuration, maximum is 1023 (1021 with
+ *                            auto-FCS Transmission).
  * @return struct uwb_dev_status
  */
 typedef struct uwb_dev_status (*uwb_write_tx_func_t)(struct uwb_dev* dev, uint8_t *tx_frame_bytes,
@@ -560,8 +563,11 @@ typedef struct uwb_dev_status (*uwb_write_tx_func_t)(struct uwb_dev* dev, uint8_
  * Configure the TX frame control register before the transmission of a frame.
  *
  * @param dev               Pointer to struct uwb_dev.
- * @param tx_frame_length   This is the length of TX message (excluding the 2 byte CRC) - max is 1023
- *                          NOTE: standard PHR mode allows up to 127 bytes.
+ * @param tx_frame_length   This is the length of TX message, excluding the two byte CRC when auto-FCS
+ *                          transmission is enabled.
+ *                          In standard PHR mode, maximum is 127 (125 with auto-FCS Transmission).
+ *                          With DWT_PHRMODE_EXT set in the phrMode configuration, maximum is 1023 (1021 with
+ *                          auto-FCS Transmission).
  * @param tx_buffer_offset  The offset in the tx buffer to send data from.
  * @return void
  */

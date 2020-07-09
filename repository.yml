@@ -21,8 +21,9 @@ repo.name: decawave-uwb-core
 repo.versions:
     "0.0.0": "master"
     "0.1.0": "uwb_core_0_1_0_tag"
+    "0.1.1": "uwb_core_0_1_1_tag"
 
-    "0-latest": "0.1.0"
+    "0-latest": "0.1.1"
     "0-dev": "0.0.0"       # master
 
 repo.newt_compatibility:
@@ -33,6 +34,8 @@ repo.newt_compatibility:
         0.0.0: good
     0.1.0:
         1.7.0: good
+    0.1.1:
+        1.7.0: good
 
 repo.deps:
     apache-mynewt-core:
@@ -42,6 +45,7 @@ repo.deps:
         vers:
             master: 1.7.0
             uwb_core_0_1_0_tag: 1.7.0
+            uwb_core_0_1_1_tag: 1.7.0
 
     decawave-uwb-dw1000:
         type: git
@@ -51,6 +55,7 @@ repo.deps:
         vers:
             master: 0-dev
             uwb_core_0_1_0_tag: 0.9.0
+            uwb_core_0_1_1_tag: 0.9.1
 
 #3K     decawave-uwb-dw3000-c0:                              # 3KAccess Only
 #3K         type: git                                        # 3KAccess Only
@@ -60,6 +65,7 @@ repo.deps:
 #3K         vers:                                            # 3KAccess Only
 #3K             master: 0-dev                                # 3KAccess Only
 #3K             uwb_core_0_1_0_tag: 0.1.0                    # 3KAccess Only
+#3K             uwb_core_0_1_1_tag: 0.1.1                    # 3KAccess Only
 
     mynewt-timescale-lib:
         type: github
@@ -68,3 +74,4 @@ repo.deps:
         vers:
             master: 0-dev
             uwb_core_0_1_0_tag: 1.0.1
+            uwb_core_0_1_1_tag: 1.0.1

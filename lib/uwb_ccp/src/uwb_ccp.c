@@ -64,10 +64,14 @@ STATS_NAME_START(uwb_ccp_stat_section)
     STATS_NAME(uwb_ccp_stat_section, rx_unsolicited)
     STATS_NAME(uwb_ccp_stat_section, rx_other_frame)
     STATS_NAME(uwb_ccp_stat_section, txrx_error)
+#if MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES) > 0
+    STATS_NAME(uwb_ccp_stat_section, err_tolerated)
+#endif
     STATS_NAME(uwb_ccp_stat_section, tx_start_error)
     STATS_NAME(uwb_ccp_stat_section, tx_relay_error)
     STATS_NAME(uwb_ccp_stat_section, tx_relay_ok)
     STATS_NAME(uwb_ccp_stat_section, irq_latency)
+    STATS_NAME(uwb_ccp_stat_section, os_lat_behind)
     STATS_NAME(uwb_ccp_stat_section, os_lat_margin)
     STATS_NAME(uwb_ccp_stat_section, rx_timeout)
     STATS_NAME(uwb_ccp_stat_section, sem_timeout)
@@ -546,6 +550,33 @@ adjust_for_epoch_to_rm(struct uwb_ccp_instance * ccp, uint16_t epoch_to_rm_us)
     ccp->os_epoch -= dpl_cputime_usecs_to_ticks(uwb_dwt_usecs_to_usecs(epoch_to_rm_us));
 }
 
+#if MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES) > 0
+static void
+issue_superframe(struct uwb_ccp_instance * ccp)
+{
+    struct uwb_dev * inst = ccp->dev_inst;
+    struct uwb_mac_interface * lcbs = NULL;
+
+    if (ccp->status.valid &&
+        ccp->missed_frames <= MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES)
+        ) {
+        /* Tolerating a (few) missed ccp-frame. Update time */
+        ccp->os_epoch += dpl_cputime_usecs_to_ticks(uwb_dwt_usecs_to_usecs(ccp->period));
+        ccp->master_epoch.timestamp += ((uint64_t)ccp->period)<<16;
+        ccp->local_epoch += ((uint64_t)ccp->period)<<16;
+        CCP_STATS_INC(err_tolerated);
+
+        /* Call all available superframe callbacks */
+        if(!(SLIST_EMPTY(&inst->interface_cbs))) {
+            SLIST_FOREACH(lcbs, &inst->interface_cbs, next) {
+                if (lcbs != NULL && lcbs->superframe_cb) {
+                    if(lcbs->superframe_cb((struct uwb_dev*)inst, lcbs)) continue;
+                }
+            }
+        }
+    }
+}
+#endif
 
 /**
  * @fn rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
@@ -817,7 +848,14 @@ error_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         return false;
 
     CCP_STATS_INC(txrx_error);
-    if(dpl_sem_get_count(&ccp->sem) == 0){
+    if(dpl_sem_get_count(&ccp->sem) == 0) {
+        if (ccp->config.role != CCP_ROLE_MASTER) {
+            ccp->status.rx_error = 1;
+            ccp->missed_frames++;
+#if MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES) > 0
+            issue_superframe(ccp);
+#endif
+        }
         dpl_error_t err = dpl_sem_release(&ccp->sem);
         assert(err == DPL_OK);
     }
@@ -844,23 +882,7 @@ rx_timeout_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         ccp->status.rx_timeout_error = 1;
         ccp->missed_frames++;
 #if MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES) > 0
-        if (ccp->status.valid &&
-            ccp->missed_frames <= MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES)) {
-            /* Tolerating a (few) missed ccp-frame. Update time */
-            ccp->os_epoch += dpl_cputime_usecs_to_ticks(uwb_dwt_usecs_to_usecs(ccp->period));
-            ccp->master_epoch.timestamp += ((uint64_t)ccp->period)<<16;
-            ccp->local_epoch += ((uint64_t)ccp->period)<<16;
-
-            /* Call all available superframe callbacks */
-            struct uwb_mac_interface * lcbs = NULL;
-            if(!(SLIST_EMPTY(&inst->interface_cbs))) {
-                SLIST_FOREACH(lcbs, &inst->interface_cbs, next) {
-                    if (lcbs != NULL && lcbs->superframe_cb) {
-                        if(lcbs->superframe_cb((struct uwb_dev*)inst, lcbs)) continue;
-                    }
-                }
-            }
-        }
+        issue_superframe(ccp);
 #endif
         DIAGMSG("{\"utime\": %"PRIu32",\"msg\": \"ccp:rx_timeout_cb\"}\n",
                 dpl_cputime_ticks_to_usecs(dpl_cputime_get32()));
@@ -1013,7 +1035,12 @@ ccp_listen(struct uwb_ccp_instance *ccp, uint64_t dx_time, uwb_dev_modes_t mode)
 
     ccp->status.rx_timeout_error = 0;
     ccp->status.start_rx_error = uwb_start_rx(inst).start_rx_error;
-    if (ccp->status.start_rx_error){
+    if (ccp->status.start_rx_error) {
+#if MYNEWT_VAL(UWB_CCP_STATS)
+        uint32_t behind = 0xffffffffU&(uwb_read_systime_lo32(inst) - dx_time);
+        CCP_STATS_SET(os_lat_behind, uwb_dwt_usecs_to_usecs(behind>>16));
+#endif
+        /*  */
         CCP_STATS_INC(rx_start_error);
         err = dpl_sem_release(&ccp->sem);
         assert(err == DPL_OK);

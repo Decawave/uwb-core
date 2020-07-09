@@ -56,10 +56,14 @@ STATS_SECT_START(uwb_ccp_stat_section)
     STATS_SECT_ENTRY(rx_unsolicited)
     STATS_SECT_ENTRY(rx_other_frame)
     STATS_SECT_ENTRY(txrx_error)
+#if MYNEWT_VAL(UWB_CCP_TOLERATE_MISSED_FRAMES) > 0
+    STATS_SECT_ENTRY(err_tolerated)
+#endif
     STATS_SECT_ENTRY(tx_start_error)
     STATS_SECT_ENTRY(tx_relay_error)
     STATS_SECT_ENTRY(tx_relay_ok)
     STATS_SECT_ENTRY(irq_latency)
+    STATS_SECT_ENTRY(os_lat_behind)
     STATS_SECT_ENTRY(os_lat_margin)
     STATS_SECT_ENTRY(rx_timeout)
     STATS_SECT_ENTRY(sem_timeout)
@@ -129,6 +133,7 @@ struct uwb_ccp_status {
     uint16_t valid_count:3;           //!< Set for valid count
     uint16_t start_tx_error:1;        //!< Set for start transmit error
     uint16_t start_rx_error:1;        //!< Set for start request error
+    uint16_t rx_error:1;              //!< Set from error_cb
     uint16_t rx_timeout_error:1;      //!< Receive timeout error
     uint16_t timer_enabled:1;         //!< Indicates timer is enabled
     uint16_t timer_restarted:1;       //!< Indicates timer has been restarted

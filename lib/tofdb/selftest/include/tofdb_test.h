@@ -17,32 +17,20 @@
  * under the License.
  */
 
-#ifndef _TOFDB_H_
-#define _TOFDB_H_
+#ifndef _UWB_TOFDB_TEST_H
+#define _UWB_TOFDB_TEST_H
 
-#include <inttypes.h>
-#include <bootutil/image.h>
-struct image_version;
+#include <stdio.h>
 
-struct tofdb_node {
-    uint16_t addr;           /*!< Local id, 16bit */
-    uint32_t last_updated;
-    float tof;
-    float sum;
-    float sum_sq;
-    uint32_t num;
-};
+#include "os/mynewt.h"
+#include "testutil/testutil.h"
+#include "tofdb/tofdb.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int tofdb_get_tof(uint16_t addr, uint32_t *tof);
-int tofdb_set_tof(uint16_t addr, uint32_t tof);
-void clear_nodes();
-
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _TOFDB_H */
+#endif /* _UWB_TOFDB_TEST_H */

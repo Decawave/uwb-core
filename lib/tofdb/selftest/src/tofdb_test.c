@@ -12,37 +12,27 @@
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
+ * KIND, either expess or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
 
-#ifndef _TOFDB_H_
-#define _TOFDB_H_
+#include <stdio.h>
 
-#include <inttypes.h>
-#include <bootutil/image.h>
-struct image_version;
+#include "tofdb_test.h"
+#include <math.h>
 
-struct tofdb_node {
-    uint16_t addr;           /*!< Local id, 16bit */
-    uint32_t last_updated;
-    float tof;
-    float sum;
-    float sum_sq;
-    uint32_t num;
-};
+TEST_CASE_DECL(tofdb_set_tof_test)
+TEST_CASE_DECL(tofdb_get_tof_test)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int tofdb_get_tof(uint16_t addr, uint32_t *tof);
-int tofdb_set_tof(uint16_t addr, uint32_t tof);
-void clear_nodes();
-
-#ifdef __cplusplus
+TEST_SUITE(tofdb_test_all)
+{
+    tofdb_set_tof_test();
+    tofdb_get_tof_test();
 }
-#endif
 
-#endif /* _TOFDB_H */
+int main(int argc, char **argv)
+{
+    tofdb_test_all();
+    return tu_any_failed;
+}

@@ -15,26 +15,25 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-pkg.name: "lib/tofdb"
-pkg.description: "Time of Flight Database"
-pkg.author: "UWB Core <uwbcore@gmail.com>"
-pkg.homepage: "https://decawave.com/"
+pkg.name: "lib/tofdb/selftest"
+pkg.type: unittest
+pkg.description: "UWB Time of Flight Database Test"
+pkg.author: "Szymon Czapracki <szymon.czapracki@codecoup.pl>"
+pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
-
-pkg.deps:
-    - "@decawave-uwb-core/lib/rng_math"
-    - "@apache-mynewt-core/kernel/os"
-    - "@apache-mynewt-core/sys/console/full"
-    - "@apache-mynewt-core/sys/shell"
-    - "@apache-mynewt-core/sys/log/full"
-    - "@apache-mynewt-core/sys/stats/full"
-    - "@mcuboot/boot/bootutil"
+    - uwb
+    - tof
 
 pkg.cflags:
     - "-std=gnu99"
     - "-fms-extensions"
 
-pkg.init:
-    tofdb_pkg_init:    600
+pkg.lflags:
+    - "-lm"
+
+pkg.deps:
+    - "@decawave-uwb-core/lib/rng_math"
+    - "@decawave-uwb-core/lib/tofdb"
+    - "@apache-mynewt-core/test/testutil"
+    - "@mcuboot/boot/bootutil"

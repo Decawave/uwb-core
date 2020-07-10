@@ -32,7 +32,7 @@
 #include <console/console.h>
 #include <streamer/streamer.h>
 
-#include "uwb_rng/uwb_rng.h"
+#include "rng_math/rng_math.h"
 #include "tofdb/tofdb.h"
 
 struct tofdb_node* tofdb_get_nodes();

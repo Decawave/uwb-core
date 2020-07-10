@@ -33,6 +33,11 @@ ret:
     return OS_OK;
 }
 
+void clear_nodes()
+{
+    memset(nodes, 0, sizeof(nodes));
+}
+
 int tofdb_set_tof(uint16_t addr, uint32_t tof)
 {
     int i;

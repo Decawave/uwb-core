@@ -57,10 +57,10 @@ pkg.deps:
     - "@decawave-uwb-core/lib/twr_ds_ext"
     - "@decawave-uwb-core/lib/nrng"
     - "@decawave-uwb-core/lib/twr_ss_nrng"
-    - '@decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000'
+    - "@decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000"
     - "@decawave-uwb-dw1000/lib/cir/cir_dw1000"
-    - '@decawave-uwb-dw3000-c0/hw/drivers/uwb/uwb_dw3000-c0'
-    - "@decawave-uwb-dw3000-c0/lib/cir/cir_dw3000-c0"
+#3K     - "@decawave-uwb-dw3000-c0/hw/drivers/uwb/uwb_dw3000-c0"  # 3KAccess Only
+#3K     - "@decawave-uwb-dw3000-c0/lib/cir/cir_dw3000-c0"         # 3KAccess Only
 
 pkg.cflags:
     - "-std=gnu11"

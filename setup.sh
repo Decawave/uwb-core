@@ -1,35 +1,27 @@
 #!/bin/bash
 
+FILES="project.yml repository.yml Makefile.kernel CMakeLists.txt apps/syscfg/pkg.yml apps/syscfg/syscfg.yml"
+
 function enable3kaccess()
 {
-    if [ "$(uname)" == "Darwin" ]; then
-        sed -e "s/^#3K\ //g" -i "" ${DIR}/project.yml
-        sed -e "s/^#3K\ //g" -i "" ${DIR}/repository.yml
-        sed -e "s/^#3K\ //g" -i "" ${DIR}/Makefile.kernel
-        sed -e "s/^#3K\ //g" -i "" ${DIR}/CMakeLists.txt
-    else
-        sed -i "s/^#3K\ //g" ${DIR}/project.yml
-        sed -i "s/^#3K\ //g" ${DIR}/repository.yml
-        sed -i "s/^#3K\ //g" ${DIR}/Makefile.kernel
-        sed -i "s/^#3K\ //g" ${DIR}/CMakeLists.txt
-    fi
+    for F in ${FILES};do
+        if [ "$(uname)" == "Darwin" ]; then
+            sed -e "s/^#3K\ //g" -i "" ${DIR}/${F}
+        else
+            sed -i "s/^#3K\ //g" ${DIR}/${F}
+        fi
+    done;
 }
 
 function disable3kaccess()
 {
-    if [ "$(uname)" == "Darwin" ]; then
-        sed -e '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' -i "" ${DIR}/project.yml
-        sed -e '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' -i "" ${DIR}/repository.yml
-        sed -e '/^[^#]/ s/\(^.*CONFIG_UWB_DW3000.*$\)/X3K\ \1/' -i "" ${DIR}/repository.yml
-        sed -e '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' -i "" ${DIR}/Makefile.kernel
-        sed -e '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' -i "" ${DIR}/CMakeLists.txt
-    else
-        sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/project.yml
-        sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/repository.yml
-        sed -i '/^[^#]/ s/\(^.*CONFIG_UWB_DW3000.*$\)/X3K\ \1/' ${DIR}/repository.yml
-        sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/Makefile.kernel
-        sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/CMakeLists.txt
-    fi
+    for F in ${FILES};do
+        if [ "$(uname)" == "Darwin" ]; then
+            sed -e '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' -i "" ${DIR}/${F}
+        else
+            sed -i '/^[^#]/ s/\(^.*3KAccess\ Only.*$\)/#3K\ \1/' ${DIR}/${F}
+        fi
+    done;
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

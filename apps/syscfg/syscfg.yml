@@ -10,7 +10,9 @@ syscfg.vals:
     UWB_DEVICE_0: 1
     UWB_DEVICE_1: 1
     DW1000_DEVICE_0: 1
-    DW3000_DEVICE_0: 1
+    DW1000_DEVICE_1: 1
+#3K     DW3000_DEVICE_0: 1  # 3KAccess Only
+#3K     DW3000_DEVICE_1: 1  # 3KAccess Only
     CONFIG_NFFS: 1
     CONFIG_NFFS_DIR: '"/data/local/tmp"'
     CONFIG_NFFS_FILE: '"/data/local/tmp/cfg.txt"'

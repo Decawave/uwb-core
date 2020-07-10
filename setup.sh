@@ -70,7 +70,9 @@ else
 fi
 
 # Overwrite the newt stored repository file with our changed one
-cp ${DIR}/repository.yml ${CHECKOUT_PATH}/.configs/decawave-uwb-core/
+if [ -e ${CHECKOUT_PATH}/.configs/decawave-uwb-core/repository.yml ];then
+    cp ${DIR}/repository.yml ${CHECKOUT_PATH}/.configs/decawave-uwb-core/
+fi
 rm -rf ${TESTCO}
 
 if [ ! -e ${CHECKOUT_PATH}/decawave-uwb-dw3000-c0 ];then

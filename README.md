@@ -2,7 +2,7 @@
 
 # uwb-core for MyNewt OS
 
-[![Build Status](https://travis-ci.com/Decawave/uwb-core.svg?token=Qc1ARRCEWyUvYoAtFTkY&branch=master)](https://travis-ci.com/Decawave/uwb-core)
+[![Build Status](https://travis-ci.org/Decawave/uwb-core.svg?branch=master)](https://travis-ci.org/Decawave/uwb-core)
 
 - See [Linux Kernel](README_kernel.md) for building uwb-core as a kernel module
 - See [Other RTOS](README_cmake.md) for building uwb-core as a standalone library

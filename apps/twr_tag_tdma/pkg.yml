@@ -34,7 +34,8 @@ pkg.deps:
     - "@apache-mynewt-core/sys/stats/full"
 #    - "@apache-mynewt-core/encoding/json"
 #   - "@apache-mynewt-core/mgmt/imgmgr"
-    - "@apache-mynewt-core/mgmt/newtmgr"
+#    - "@apache-mynewt-core/mgmt/newtmgr"
+    - "@apache-mynewt-core/mgmt/mgmt"
     - '@decawave-uwb-dw1000/hw/drivers/uwb/uwb_dw1000'
     - "@decawave-uwb-core/lib/twr_ss_nrng"
     - "@decawave-uwb-core/sys/uwbcfg"

@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include <sysinit/sysinit.h>
 
 #include "dpl/dpl_types.h"
 

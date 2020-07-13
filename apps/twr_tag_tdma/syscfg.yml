@@ -2,7 +2,7 @@ syscfg.vals:
     CONSOLE_UART: 1
     CONSOLE_UART_BAUD: 4000000
     CONSOLE_UART_TX_BUF_SIZE: 1024
-    CONSOLE_HISTORY_SIZE: 8
+    #CONSOLE_HISTORY_SIZE: 8
 
     LOG_LEVEL: 0
     LOG_SOFT_RESET: 0
@@ -50,7 +50,7 @@ syscfg.vals:
     UWBCFG_APPLY_AT_INIT: 1
 
     # Enable newtmgr commands.
-    STATS_NEWTMGR: 1
-    LOG_NEWTMGR: 1
-    CONFIG_NEWTMGR: 1
+    STATS_MGMT: 1
+    LOG_MGMT: 1
+    CONFIG_MGMT: 1
     OS_LATENCY: 2000

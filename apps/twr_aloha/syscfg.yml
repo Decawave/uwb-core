@@ -2,7 +2,7 @@ syscfg.vals:
     # Route console to RTT
     CONSOLE_UART_BAUD: 1000000
     CONSOLE_UART_TX_BUF_SIZE: 1024
-    CONSOLE_HISTORY_SIZE: 32
+    #CONSOLE_HISTORY_SIZE: 32
 
     LOG_LEVEL: 0
     LOG_SOFT_RESET: 0
@@ -25,8 +25,8 @@ syscfg.vals:
     TWR_SS_NRNG_ENABLED: 0
     SURVEY_ENABLED: 0
     # Enable newtmgr commands.
-    STATS_NEWTMGR: 1
-    LOG_NEWTMGR: 1
+    STATS_MGMT: 1
+    LOG_MGMT: 1
 
     UWB_PAN_VERSION_ENABLED: 0
     DW3000_PKG_INIT_LOG: 1

@@ -1,0 +1,121 @@
+From 73932702edef3f206d4ad9671971e6e93fe37a03 Mon Sep 17 00:00:00 2001
+From: Szymon Janc <szymon.janc@codecoup.pl>
+Date: Mon, 18 May 2020 14:36:04 +0200
+Subject: [PATCH] Fix complilation with GCC 10
+
+GCC 10 enables -fno-common by default.
+---
+ encoding/json/hosttest/src/test_json_priv.h | 12 ++++++------
+ encoding/json/selftest/src/test_json_priv.h | 12 ++++++------
+ fs/fs/src/fs_mount.c                        |  2 +-
+ fs/nffs/selftest/src/nffs_test_utils.h      |  3 ---
+ fs/nffs/src/nffs_dir.c                      |  2 +-
+ fs/nffs/src/nffs_file.c                     |  2 +-
+ 6 files changed, 15 insertions(+), 18 deletions(-)
+
+diff --git a/encoding/json/hosttest/src/test_json_priv.h b/encoding/json/hosttest/src/test_json_priv.h
+index a32c4fbe2..69ace9353 100644
+--- a/encoding/json/hosttest/src/test_json_priv.h
++++ b/encoding/json/hosttest/src/test_json_priv.h
+@@ -28,14 +28,14 @@
+ extern "C" {
+ #endif
+ 
+-char *output;
+-char *output1;
+-char *outputboolspace;
+-char *outputboolempty;
++extern char *output;
++extern char *output1;
++extern char *outputboolspace;
++extern char *outputboolempty;
+ 
+ #define JSON_BIGBUF_SIZE    192
+-char *bigbuf;
+-int buf_index;
++extern char *bigbuf;
++extern int buf_index;
+ 
+ /* a test structure to hold the json flat buffer and pass bytes
+  * to the decoder */
+diff --git a/encoding/json/selftest/src/test_json_priv.h b/encoding/json/selftest/src/test_json_priv.h
+index a32c4fbe2..69ace9353 100644
+--- a/encoding/json/selftest/src/test_json_priv.h
++++ b/encoding/json/selftest/src/test_json_priv.h
+@@ -28,14 +28,14 @@
+ extern "C" {
+ #endif
+ 
+-char *output;
+-char *output1;
+-char *outputboolspace;
+-char *outputboolempty;
++extern char *output;
++extern char *output1;
++extern char *outputboolspace;
++extern char *outputboolempty;
+ 
+ #define JSON_BIGBUF_SIZE    192
+-char *bigbuf;
+-int buf_index;
++extern char *bigbuf;
++extern int buf_index;
+ 
+ /* a test structure to hold the json flat buffer and pass bytes
+  * to the decoder */
+diff --git a/fs/fs/src/fs_mount.c b/fs/fs/src/fs_mount.c
+index f43738aa8..5319aed7b 100644
+--- a/fs/fs/src/fs_mount.c
++++ b/fs/fs/src/fs_mount.c
+@@ -96,7 +96,7 @@ fs_ops_for(const char *fs_name)
+     return fops;
+ }
+ 
+-struct fs_ops not_initialized_ops;
++extern struct fs_ops not_initialized_ops;
+ 
+ struct fs_ops *
+ fs_ops_from_container(struct fops_container *container)
+diff --git a/fs/nffs/selftest/src/nffs_test_utils.h b/fs/nffs/selftest/src/nffs_test_utils.h
+index 0dd21472c..ad22cb956 100644
+--- a/fs/nffs/selftest/src/nffs_test_utils.h
++++ b/fs/nffs/selftest/src/nffs_test_utils.h
+@@ -36,9 +36,6 @@
+ extern "C" {
+ #endif
+ 
+-extern struct nffs_hash_entry *nffs_test_touched_entries;
+-int nffs_test_num_touched_entries;
+-
+ extern int flash_native_memset(uint32_t offset, uint8_t c, uint32_t len);
+ 
+ void nffs_test_util_assert_ent_name(struct fs_dirent *dirent,
+diff --git a/fs/nffs/src/nffs_dir.c b/fs/nffs/src/nffs_dir.c
+index 8cdefa9f7..a30636aed 100644
+--- a/fs/nffs/src/nffs_dir.c
++++ b/fs/nffs/src/nffs_dir.c
+@@ -23,7 +23,7 @@
+ #include "nffs/nffs.h"
+ #include "fs/fs_if.h"
+ 
+-struct fs_ops nffs_ops;
++extern struct fs_ops nffs_ops;
+ 
+ static struct nffs_dir *
+ nffs_dir_alloc(void)
+diff --git a/fs/nffs/src/nffs_file.c b/fs/nffs/src/nffs_file.c
+index bf1866f12..c7bcb0290 100644
+--- a/fs/nffs/src/nffs_file.c
++++ b/fs/nffs/src/nffs_file.c
+@@ -23,7 +23,7 @@
+ #include "nffs/nffs.h"
+ #include "fs/fs_if.h"
+ 
+-struct fs_ops nffs_ops;
++extern struct fs_ops nffs_ops;
+ 
+ static struct nffs_file *
+ nffs_file_alloc(void)
+-- 
+2.26.2
+

@@ -235,7 +235,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uint64_t request_timestamp = dw1000_read_rxtime(inst);
                 uint64_t response_tx_delay = request_timestamp + (((uint64_t)config->tx_holdoff_delay
                             + (uint64_t)((slot_id-1) * ((uint64_t)config->tx_guard_delay
-                                    + (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t)))))))<< 16);
+                            + (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t), 0))))))<< 16);
                 uint64_t response_timestamp = (response_tx_delay & 0xFFFFFFFE00UL) + inst->tx_antenna_delay;
 
                 frame->reception_timestamp =  request_timestamp;
@@ -248,7 +248,8 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_write_tx(inst, frame->array, 0, sizeof(nrng_response_frame_t));
                 uwb_write_tx_fctrl(inst, sizeof(nrng_response_frame_t), 0);
                 uwb_set_wait4resp(inst, true);
-                uint16_t timeout =config->tx_holdoff_delay + (frame->end_slot_id - slot_id + 1) * (uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t))
+                uint16_t timeout =config->tx_holdoff_delay
+                    + (frame->end_slot_id - slot_id + 1) * (uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t), 0)
                         + config->rx_timeout_period
                         + config->tx_guard_delay);
                 uwb_set_rx_timeout(inst, timeout);
@@ -280,7 +281,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 if(idx < (nnodes-1)){
                     // At the start the device will wait for the entire nnodes to respond as a single huge timeout.
                     // When a node respond we will recalculate the remaining time to be waited for as (total_nodes - completed_nodes)*(phy_duaration + guard_delay)
-                    uint16_t phy_duration = uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t));
+                    uint16_t phy_duration = uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t), 0);
                     uint16_t timeout = ((phy_duration + dw1000_dwt_usecs_to_usecs(config->tx_guard_delay)) * (end_slot_id - node_slot_id));
                     uwb_set_rx_timeout(inst, timeout);
                     uwb_start_rx(inst);
@@ -314,7 +315,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 nrng->t1_final_flag = 1;
                 if(idx == (nnodes - 1))
                 {
-                    uint16_t timeout = (((nnodes) * (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t))))
+                    uint16_t timeout = (((nnodes) * (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t), 0)))
                                 + (nnodes - 1)*(config->tx_guard_delay))
                             + config->tx_holdoff_delay         // Remote side turn arroud time.
                             + config->rx_timeout_period);
@@ -350,7 +351,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uint64_t request_timestamp = dw1000_read_rxtime(inst);
                 uint64_t response_tx_delay = request_timestamp + (((uint64_t)config->tx_holdoff_delay
                             + (uint64_t)((inst->slot_id-1) * ((uint64_t)config->tx_guard_delay
-                                    + uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t))))))<< 16);
+                            + uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t), 0)))))<< 16);
                 frame->request_timestamp = dw1000_read_txtime_lo(inst); // This corresponds to when the original request was actually sent
                 frame->response_timestamp = dw1000_read_rxtime_lo(inst);  // This corresponds to the response just received
                 frame->dst_address = frame->src_address;
@@ -400,7 +401,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 if(idx < nnodes-1){
                     // At the start the device will wait for the entire nnodes to respond as a single huge timeout.
                     // When a node respond we will recalculate the remaining time to be waited for as (total_nodes - completed_nodes)*(phy_duaration + guard_delay)
-                    uint16_t phy_duration = uwb_phy_frame_duration(inst, sizeof(nrng_frame_t));
+                    uint16_t phy_duration = uwb_phy_frame_duration(inst, sizeof(nrng_frame_t), 0);
                     uint16_t timeout = ((phy_duration + config->tx_guard_delay) * (end_slot_id - node_slot_id));
                     uwb_set_rx_timeout(inst, timeout);
                     uwb_start_rx(inst);
@@ -444,7 +445,7 @@ send_final_msg(struct uwb_dev * inst , nrng_frame_t * frame){
     uwb_write_tx(inst, frame->array, 0, sizeof(nrng_request_frame_t));
     uwb_write_tx_fctrl(inst, sizeof(nrng_request_frame_t), 0);
     uwb_set_wait4resp(inst, true);
-    uint16_t timeout = (((nnodes) * (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t))))
+    uint16_t timeout = (((nnodes) * (uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t), 0)))
             + (nnodes - 1)*(config->tx_guard_delay))
             + config->tx_holdoff_delay         // Remote side turn arroud time.
             + config->rx_timeout_period);

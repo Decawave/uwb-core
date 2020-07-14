@@ -224,7 +224,7 @@ ccp_slave_timer_ev_cb(struct dpl_event *ev)
     struct uwb_dev * inst = ccp->dev_inst;
 
     /* Precalc / update blink frame duration */
-    ccp->blink_frame_duration = uwb_phy_frame_duration(inst, sizeof(uwb_ccp_blink_frame_t));
+    ccp->blink_frame_duration = uwb_phy_frame_duration(inst, sizeof(uwb_ccp_blink_frame_t), 0);
 
     if (!ccp->status.enabled) {
         return;
@@ -251,7 +251,7 @@ ccp_slave_timer_ev_cb(struct dpl_event *ev)
 #else
     dx_time += ((uint64_t)ccp->period << 16);
 #endif
-    dx_time -= ((uint64_t)ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(inst) +
+    dx_time -= ((uint64_t)ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(inst, 0) +
                                                        inst->config.rx.timeToRxStable)) << 16);
 
     timeout = ccp->blink_frame_duration + MYNEWT_VAL(XTALT_GUARD);
@@ -944,7 +944,7 @@ ccp_send(struct uwb_ccp_instance *ccp, uwb_dev_modes_t mode)
     uwb_ccp_frame_t * frame = ccp->frames[(ccp->idx+1)%ccp->nframes];
     frame->rpt_count = 0;
     frame->rpt_max = MYNEWT_VAL(UWB_CCP_MAX_CASCADE_RPTS);
-    frame->epoch_to_rm_us = uwb_phy_SHR_duration(inst);
+    frame->epoch_to_rm_us = uwb_phy_SHR_duration(inst, 0);
 
     uint64_t timestamp = previous_frame->transmission_timestamp.timestamp
                         + ((uint64_t)ccp->period << 16);
@@ -1078,7 +1078,7 @@ void
 uwb_ccp_start(struct uwb_ccp_instance *ccp, uwb_ccp_role_t role)
 {
     struct uwb_dev * inst = ccp->dev_inst;
-    uint16_t epoch_to_rm = uwb_phy_SHR_duration(inst);
+    uint16_t epoch_to_rm = uwb_phy_SHR_duration(inst, 0);
 
     // Initialise frame timestamp to current time
     DIAGMSG("{\"utime\": %"PRIu32",\"msg\": \"uwb_ccp_start\"}\n",

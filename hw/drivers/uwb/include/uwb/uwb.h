@@ -703,30 +703,33 @@ typedef uint32_t (*uwb_read_txtime_lo32_func_t)(struct uwb_dev* dev);
 
 /**
  * Calculate the frame duration (airtime) in usecs (not uwb usecs).
- * @param attrib    Pointer to struct uwb_phy_attributes_t *. The phy attritubes are part of the IEEE802.15.4-2011 standard.
- * Note the morphology of the frame depends on the mode of operation, see the dw*000_hal.c for the default behaviour
+ * @param dev       Pointer to struct uwb_dev *.
  * @param nlen      The length of the frame to be transmitted/received excluding crc
  * @return uint16_t duration in usec (not uwb usec)
+ * @param attrib    Optional pointer to struct uwb_phy_attributes *, NULL = default from instance
+ * @return uint16_t duration in usec (not uwb usec)
  */
-typedef uint16_t (*uwb_phy_frame_duration_func_t)(struct uwb_dev* dev, uint16_t nlen);
+typedef uint16_t (*uwb_phy_frame_duration_func_t)(struct uwb_dev* dev, uint16_t nlen, struct uwb_phy_attributes * attrib);
 
 /**
  * API to calculate the SHR (Preamble + SFD) duration. This is used to calculate the correct rx_timeout.
- * @param attrib    Pointer to struct uwb_phy_attributes *. The phy attritubes are part of the IEEE802.15.4-2011 standard.
- * Note the morphology of the frame depends on the mode of operation, see the dw*000_hal.c for the default behaviour
- * @param nlen      The length of the frame to be transmitted/received excluding crc
+ * @param dev       Pointer to struct uwb_dev *.
+ * @param attrib    Optional pointer to struct uwb_phy_attributes *, NULL = default from instance.
+ *                  The phy attritubes are part of the IEEE802.15.4-2011 standard.
+ *                  Note the morphology of the frame depends on the mode of operation, see the dw*000_hal.c for the default behaviour.
+ *                  You would only override the attrib if you're sending with a different preamble length than the configured one.
  * @return uint16_t duration in usec (not uwb usec)
  */
-typedef uint16_t (*uwb_phy_SHR_duration_func_t)(struct uwb_dev* dev);
+typedef uint16_t (*uwb_phy_SHR_duration_func_t)(struct uwb_dev* dev, struct uwb_phy_attributes * attrib);
 
 /**
  * API to calculate the data duration. This is used to calculate the correct rx_timeout.
- * @param attrib    Pointer to struct uwb_phy_attributes *. The phy attritubes are part of the IEEE802.15.4-2011 standard.
- * Note the morphology of the frame depends on the mode of operation, see the dw*000_hal.c for the default behaviour
+ * @param dev       Pointer to struct uwb_dev *.
  * @param nlen      The length of the frame to be transmitted/received excluding crc
+ * @param attrib    Optional pointer to struct uwb_phy_attributes *, NULL = default from instance.
  * @return uint16_t duration in usec (not uwb usec)
  */
-typedef uint16_t (*uwb_phy_data_duration_func_t)(struct uwb_dev* dev, uint16_t nlen);
+typedef uint16_t (*uwb_phy_data_duration_func_t)(struct uwb_dev* dev, uint16_t nlen, struct uwb_phy_attributes * attrib);
 
 /**
  * Turn off the transceiver.
@@ -1108,9 +1111,9 @@ struct uwb_dev {
     uint64_t uwb_read_sts_rxtime(struct uwb_dev* dev);
     uint64_t uwb_read_txtime(struct uwb_dev* dev);
     uint32_t uwb_read_txtime_lo32(struct uwb_dev* dev);
-    uint16_t uwb_phy_frame_duration(struct uwb_dev* dev, uint16_t nlen);
-    uint16_t uwb_phy_SHR_duration(struct uwb_dev* dev);
-    uint16_t uwb_phy_data_duration(struct uwb_dev* dev, uint16_t nlen);
+    uint16_t uwb_phy_frame_duration(struct uwb_dev* dev, uint16_t nlen, struct uwb_phy_attributes * attrib);
+    uint16_t uwb_phy_SHR_duration(struct uwb_dev* dev, struct uwb_phy_attributes * attrib);
+    uint16_t uwb_phy_data_duration(struct uwb_dev* dev, uint16_t nlen, struct uwb_phy_attributes * attrib);
     void uwb_phy_forcetrxoff(struct uwb_dev* dev);
     void uwb_phy_rx_reset(struct uwb_dev * dev);
     void uwb_phy_repeated_frames(struct uwb_dev * dev, uint64_t rate);

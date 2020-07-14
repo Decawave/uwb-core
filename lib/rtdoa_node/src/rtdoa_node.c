@@ -168,7 +168,7 @@ tx_rtdoa_response(struct rtdoa_instance * rtdoa)
     /* usecs to dwt usecs? */
     uint8_t slot_idx = inst->slot_id % rtdoa->req_frame->slot_modulus + 1;
     dx_time += (rtdoa_usecs_to_response(inst, (rtdoa_request_frame_t*)rtdoa->req_frame, slot_idx, config,
-                                        uwb_phy_frame_duration(inst, sizeof(rtdoa_response_frame_t))) << 16);
+                                        uwb_phy_frame_duration(inst, sizeof(rtdoa_response_frame_t), 0)) << 16);
 
     RTDOA_STATS_INC(rtdoa_response);
 

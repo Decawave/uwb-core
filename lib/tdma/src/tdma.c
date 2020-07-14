@@ -532,9 +532,9 @@ tdma_tx_slot_start(struct _tdma_instance_t * tdma, dpl_float32_t idx)
 {
     uint64_t dx_time = tdma_rx_slot_start(tdma, idx);
 #ifndef __KERNEL__
-    dx_time = (dx_time + ((uint64_t)ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst))) << 16));
+    dx_time = (dx_time + ((uint64_t)ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst, 0))) << 16));
 #else
-    dx_time = (dx_time + ((uint64_t)(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst))) << 16));
+    dx_time = (dx_time + ((uint64_t)(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst, 0))) << 16));
 #endif
     return dx_time;
 }

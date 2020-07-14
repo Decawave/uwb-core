@@ -206,7 +206,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uint64_t response_tx_delay = request_timestamp
                             + (((uint64_t)config->tx_holdoff_delay
                             + (uint64_t)(slot_idx * ((uint64_t)config->tx_guard_delay
-                            + (uint64_t)(uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t)))))))<< 16);
+                            + (uint64_t)(uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(nrng_frame_t), 0))))))<< 16);
                 uint64_t response_timestamp = (response_tx_delay & 0xFFFFFFFE00UL) + inst->tx_antenna_delay;
 
 #if MYNEWT_VAL(UWB_WCS_ENABLED)

@@ -231,7 +231,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 /* Setup when to listen for response, relative the end of our transmitted frame */
                 uwb_set_wait4resp_delay(inst, g_config.tx_holdoff_delay -
                                         inst->config.rx.timeToRxStable);
-                uwb_set_rx_timeout(inst, uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE)) +
+                uwb_set_rx_timeout(inst, uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE, 0)) +
                                    g_config.rx_timeout_delay + inst->config.rx.timeToRxStable);
                 break;
             }
@@ -299,7 +299,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 /* Setup when to listen for response, relative the end of our transmitted frame */
                 uwb_set_wait4resp_delay(inst, g_config.tx_holdoff_delay -
                                         inst->config.rx.timeToRxStable);
-                uwb_set_rx_timeout(inst, uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE)) +
+                uwb_set_rx_timeout(inst, uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE, 0)) +
                                    g_config.rx_timeout_delay + inst->config.rx.timeToRxStable);
                 break;
             }

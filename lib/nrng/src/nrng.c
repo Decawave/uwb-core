@@ -466,7 +466,7 @@ nrng_request(struct nrng_instance * nrng, uint16_t dst_address, uwb_dataframe_co
                         + usecs_to_response(inst,       // Remaining timeout
                             nrng->nnodes,               // no. of expected frames
                             config,
-                            uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t)) // in usec
+                                            uwb_phy_frame_duration(inst, sizeof(nrng_response_frame_t), 0) // in usec
                         ) + config->rx_timeout_delay;     // TOF allowance.
     uwb_set_rx_timeout(inst, timeout);
 

@@ -232,10 +232,10 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
             /* Adjust timeout and delayed start to match when the responses will arrive */
             uint64_t dx_time = inst->rxtimestamp - repeat_dly;
             dx_time += (rtdoa_usecs_to_response(inst, (rtdoa_request_frame_t*)rtdoa->req_frame, 0, &rtdoa->config,
-                            uwb_phy_frame_duration(inst, sizeof(rtdoa_response_frame_t))) << 16);
+                            uwb_phy_frame_duration(inst, sizeof(rtdoa_response_frame_t), 0)) << 16);
 
             /* Subtract the preamble time */
-            dx_time -= uwb_phy_SHR_duration(inst);
+            dx_time -= uwb_phy_SHR_duration(inst, 0);
             uwb_set_delay_start(inst, dx_time);
             if(uwb_start_rx(inst).start_rx_error){
                 os_sem_release(&rtdoa->sem);

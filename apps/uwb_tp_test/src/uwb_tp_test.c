@@ -85,7 +85,7 @@ stream_slot_cb(struct dpl_event * ev)
         return;
     }
 
-    preamble_duration = (uint64_t) uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst));
+    preamble_duration = (uint64_t) uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(tdma->dev_inst, 0));
     /* If there's something in our tx queue try TX */
     dxtime = tdma_tx_slot_start(tdma, DPL_FLOAT32_I32_TO_F32(idx));
     dxtime_end = (tdma_tx_slot_start(tdma, DPL_FLOAT32_I32_TO_F32(idx+1)) - (preamble_duration << 16));

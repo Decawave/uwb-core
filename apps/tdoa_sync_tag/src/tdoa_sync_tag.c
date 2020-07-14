@@ -86,7 +86,7 @@ void tdoa_timer_ev_cb(struct dpl_event *ev)
         goto early_ret;
     }
 
-    frame_duration = uwb_phy_frame_duration(udev, sizeof(frame));
+    frame_duration = uwb_phy_frame_duration(udev, sizeof(frame), 0);
     frame.ts = (uwb_read_systime(udev) + ((frame_duration + MYNEWT_VAL(OS_LATENCY))<<16));
     frame.ts &= 0xfffffffffffffe00ULL;
     uwb_set_delay_start(udev, frame.ts);

@@ -615,7 +615,7 @@ rx_post_process(struct os_event* ev)
         if(htons(frame->hdr.nh_len) > NMGR_UWB_MTU_EXT && 0){
             nmgr_inst->repeat_mode = 1;
             nmgr_inst->rem_len = (htons(frame->hdr.nh_len) + sizeof(struct nmgr_hdr)) - OS_MBUF_PKTLEN(nmgr_inst->rx_pkt);
-            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128) + 0x600;
+            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128, 0) + 0x600;
             uwb_set_rx_timeout(nmgr_inst->dev_inst, timeout);
             uwb_start_rx(nmgr_inst->dev_inst);
         }
@@ -626,7 +626,7 @@ rx_post_process(struct os_event* ev)
         if(nmgr_inst->rem_len == 0)
             nmgr_inst->repeat_mode = 0;
         else{
-            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128) + 0x600;
+            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128, 0) + 0x600;
             uwb_set_rx_timeout(nmgr_inst->dev_inst, timeout);
             uwb_start_rx(nmgr_inst->dev_inst);
         }

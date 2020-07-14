@@ -243,7 +243,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
             return false;
         }
         rng->ack_rx_timestamp = inst->rxtimestamp;
-        uint16_t frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst,sizeof(ieee_rng_response_frame_t)));
+        uint16_t frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(ieee_rng_response_frame_t), 0));
         /* Need to set, not just adjust, timeout here */
         uwb_set_rx_timeout(inst, g_config.tx_holdoff_delay + frame_duration + g_config.rx_timeout_delay);
         return true;
@@ -378,7 +378,7 @@ tx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         uwb_write_tx_fctrl(inst, sizeof(ieee_rng_response_frame_t), 0);
         uwb_set_wait4resp(inst, true);
         uwb_set_wait4resp_delay(inst, 0);
-        uint16_t frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst,sizeof(ieee_rng_response_frame_t)));
+        uint16_t frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(ieee_rng_response_frame_t), 0));
         uwb_set_rx_timeout(inst, g_config.tx_holdoff_delay + frame_duration + g_config.rx_timeout_delay);
 
         /* Disable default behavor, do not RXENAB on RXFCG

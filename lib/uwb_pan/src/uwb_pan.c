@@ -812,7 +812,7 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
                 timeout = 3*ccp->period/tdma->nslots/4;
             } else {
                 /* Only listen long enough to get any resets from master */
-                timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)))
+                timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)), 0)
                     + MYNEWT_VAL(XTALT_GUARD);
             }
             uwb_set_rx_timeout(tdma->dev_inst, timeout);

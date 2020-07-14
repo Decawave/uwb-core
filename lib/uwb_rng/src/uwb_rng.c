@@ -409,7 +409,7 @@ uwb_rng_calc_rel_tx(struct uwb_rng_instance * rng, struct uwb_rng_txd *ret,
 {
     /* Rx-frame data duration, as this is after the r-marker it eats into the time
      * we have to respond. */
-    uint16_t data_duration = uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(rng->dev_inst, rx_data_len));
+    uint16_t data_duration = uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(rng->dev_inst, rx_data_len, 0));
     ret->response_tx_delay = ts + (((uint64_t) cfg->tx_holdoff_delay + rng->frame_shr_duration + data_duration) << 16);
     ret->response_timestamp = (ret->response_tx_delay & 0xFFFFFFFE00UL) + rng->dev_inst->tx_antenna_delay;
     return;
@@ -496,8 +496,8 @@ uwb_rng_request(struct uwb_rng_instance * rng, uint16_t dst_address, uwb_datafra
     uwb_write_tx_fctrl(inst, sizeof(ieee_rng_request_frame_t), 0);
     uwb_set_wait4resp(inst, true);
 
-    data_duration = uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(inst, sizeof(ieee_rng_response_frame_t)));
-    frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(ieee_rng_response_frame_t)));
+    data_duration = uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(inst, sizeof(ieee_rng_response_frame_t), 0));
+    frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, sizeof(ieee_rng_response_frame_t), 0));
     rng->frame_shr_duration = frame_duration - data_duration;
 
     // The wait for response counter starts on the completion of the entire outgoing frame.
@@ -517,7 +517,7 @@ uwb_rng_request(struct uwb_rng_instance * rng, uint16_t dst_address, uwb_datafra
     // The timeout counter starts when the receiver in re-enabled. The timeout event
     // should occur just after the inbound frame is received
     if (code == UWB_DATA_CODE_SS_TWR_EXT) {
-        frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE));
+        frame_duration = uwb_usecs_to_dwt_usecs(uwb_phy_frame_duration(inst, TWR_EXT_FRAME_SIZE, 0));
     }
     uwb_set_rx_timeout(inst, frame_duration + config->rx_timeout_delay +
                        inst->config.rx.timeToRxStable);
@@ -574,7 +574,7 @@ uwb_rng_listen(struct uwb_rng_instance * rng, int32_t timeout, uwb_dev_modes_t m
     uwb_set_rxauto_disable(rng->dev_inst, true);
 
     /* Precalculate shr duration */
-    rng->frame_shr_duration = uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(rng->dev_inst));
+    rng->frame_shr_duration = uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(rng->dev_inst, 0));
 
     if (rng->control.delay_start_enabled)
         uwb_set_delay_start(inst, rng->delay);

@@ -669,7 +669,7 @@ uwb_transport_start_tx(struct _uwb_transport_instance *uwb_transport, struct dpl
     /* Wait for ack? */
     if (uwb_transport->config.request_acks) {
         uwb_set_wait4resp(inst, 1);
-        uwb_set_rx_timeout(inst, 12 + 10 + uwb_phy_frame_duration(uwb_transport->dev_inst, 5));
+        uwb_set_rx_timeout(inst, 12 + 10 + uwb_phy_frame_duration(uwb_transport->dev_inst, 5, 0));
         uwb_set_rxauto_disable(inst, true);
     }
 
@@ -703,7 +703,7 @@ uwb_transport_dequeue_tx(struct _uwb_transport_instance *uwb_transport, uint64_t
         return false;
     }
     dx_time = arg_dx_time;
-    preamble_duration = (uint64_t) ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(uwb_transport->dev_inst)));
+    preamble_duration = (uint64_t) ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_SHR_duration(uwb_transport->dev_inst, 0)));
 
     /* Transmit frames as long as time permits */
     do {
@@ -720,8 +720,9 @@ uwb_transport_dequeue_tx(struct _uwb_transport_instance *uwb_transport, uint64_t
 
         dx_time += last_duration;
         dx_time &= UWB_DTU_40BMASK;
-        data_duration = (uint64_t) ceilf(uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(uwb_transport->dev_inst,
-                            DPL_MBUF_PKTLEN(om) + sizeof(uwb_transport_frame_header_t))));
+        data_duration = (uint64_t) ceilf(
+            uwb_usecs_to_dwt_usecs(uwb_phy_data_duration(uwb_transport->dev_inst,
+                                                         DPL_MBUF_PKTLEN(om) + sizeof(uwb_transport_frame_header_t), 0)));
         next_duration = ((preamble_duration + data_duration + MYNEWT_VAL(UWB_TRANSPORT_SUBSLOT_GUARD)) << 16);
         last_duration = next_duration;
 

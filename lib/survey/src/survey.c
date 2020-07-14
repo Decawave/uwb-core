@@ -323,7 +323,7 @@ survey_listen(survey_instance_t * survey, uint64_t dx_time){
     STATS_INC(survey->stat, listen);
 
     uwb_set_delay_start(survey->dev_inst, dx_time);
-    uint16_t timeout = uwb_phy_frame_duration(survey->dev_inst, sizeof(nrng_request_frame_t))
+    uint16_t timeout = uwb_phy_frame_duration(survey->dev_inst, sizeof(nrng_request_frame_t), 0)
                         + survey->nrng->config.rx_timeout_delay;
     uwb_set_rx_timeout(survey->dev_inst, timeout + 0x1000);
     nrng_listen(survey->nrng, UWB_BLOCKING);
@@ -410,7 +410,7 @@ survey_receiver(survey_instance_t * survey, uint64_t dx_time){
     STATS_INC(survey->stat, receiver);
 
     uint16_t n = sizeof(struct _survey_broadcast_frame_t) + sizeof(struct survey_nrng);
-    uint16_t timeout = uwb_phy_frame_duration(inst, n)
+    uint16_t timeout = uwb_phy_frame_duration(inst, n, 0)
                         + survey->config.rx_timeout_delay;
     uwb_set_rx_timeout(inst, timeout);
 

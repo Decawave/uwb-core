@@ -38,6 +38,9 @@ syscfg.defs:
     UWBCFG_DEF_RX_SFD_TYPE:
         description: 'Default UWB SFD Type (0, 1)'
         value: '"1"'
+    UWBCFG_DEF_RX_SFD_TO:
+        description: 'Default UWB SFD Timeout (-1=auto, timeout in symbols)'
+        value: '"-1"'
     UWBCFG_DEF_RX_STS_MODE:
         description: 'Default UWB Sts Mode (0, 1, 2, sdc, 4z)'
         value: '"0"'

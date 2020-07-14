@@ -58,6 +58,7 @@ char g_uwb_config[CFGSTR_MAX][CFGSTR_STRLEN] = {
     MYNEWT_VAL(UWBCFG_DEF_PACLEN),            /* rx_paclen */
     MYNEWT_VAL(UWBCFG_DEF_RX_PREAM_CIDX),     /* rx_pream_cidx */
     MYNEWT_VAL(UWBCFG_DEF_RX_SFD_TYPE),       /* rx_sfdType */
+    MYNEWT_VAL(UWBCFG_DEF_RX_SFD_TO),         /* rx_sfd_to */
     MYNEWT_VAL(UWBCFG_DEF_RX_PHR_MODE),       /* rx_phrMode */
 #if MYNEWT_VAL(DW3000_DEVICE_0)
     MYNEWT_VAL(UWBCFG_DEF_RX_PHR_RATE),       /* rx_phrRate */
@@ -92,6 +93,7 @@ const char* g_uwbcfg_str[] = {
     "rx_paclen",
     "rx_pream_cidx",
     "rx_sfdtype",
+    "rx_sfd_to",
     "rx_phrmode",
 #if MYNEWT_VAL(DW3000_DEVICE_0)
     "rx_phr_rate",
@@ -200,6 +202,7 @@ uwbcfg_commit_to_inst(struct uwb_dev * inst, char cfg[CFGSTR_MAX][CFGSTR_STRLEN]
     conf_value_from_str(cfg[CFGSTR_RX_PACLEN], CONF_INT8, (void*)&paclen, 0);
     conf_value_from_str(cfg[CFGSTR_RX_SFDTYPE], CONF_INT8,
                         (void*)&inst->config.rx.sfdType, 0);
+    conf_value_from_str(cfg[CFGSTR_RX_SFD_TO], CONF_INT16, (void*)&sfd_timeout, 0);
     inst->config.rx.phrMode = (cfg[CFGSTR_RX_PHRMODE][0] == 's')? DWT_PHRMODE_STD : DWT_PHRMODE_EXT;
 
     /* RX diagnostics */
@@ -273,7 +276,9 @@ uwbcfg_commit_to_inst(struct uwb_dev * inst, char cfg[CFGSTR_MAX][CFGSTR_STRLEN]
     }
 
     /* Calculate the SFD timeout */
-    sfd_timeout = (preamble_len + 1 + sfd_len - paclen);
+    if (sfd_timeout < 1) {
+        sfd_timeout = (preamble_len + 1 + sfd_len - paclen);
+    }
     inst->config.tx.preambleLength = txP;
     inst->config.rx.sfdTimeout = sfd_timeout;
     inst->attrib.nsfd = sfd_len;

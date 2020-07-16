@@ -17,13 +17,13 @@
 # under the License.
 #
 
-pkg.name: lib/nmgr_uwb
+pkg.name: lib/smp_uwb
 pkg.description: UWB Transport Layer for NewtMgr
 pkg.author: "UWB Core <uwbcore@gmail.com>"
 pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
     - uwb
-    - nmgr
+    - smp
 
 pkg.cflags:
     - "-std=gnu99"
@@ -32,7 +32,8 @@ pkg.cflags:
 pkg.deps:
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/mgmt/mgmt"
-    - "@apache-mynewt-core/mgmt/newtmgr"
+    #- "@apache-mynewt-core/mgmt/newtmgr"
+    - "@apache-mynewt-core/mgmt/smp"
 
 pkg.init:
-    nmgr_uwb_pkg_init: 410
+    smp_uwb_pkg_init: 410

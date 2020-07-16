@@ -18,7 +18,7 @@
  */
 
 /**
- * @file nmgr_uwb.h
+ * @file smp_uwb.h
  * @author UWB Core <uwbcore@gmail.com>
  * @date 2019
  * @brief
@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef _NMGR_UWB_H_
-#define _NMGR_UWB_H_
+#ifndef _SMP_UWB_H_
+#define _SMP_UWB_H_
 
 
 #include <stdlib.h>
@@ -42,15 +42,15 @@ extern "C" {
 #include <uwb/uwb.h>
 #include <uwb/uwb_ftypes.h>
 
-#define NMGR_UWB_MTU_STD (128 -  sizeof(struct _ieee_std_frame_t) - sizeof(uint16_t) - 2/*CRC*/)
-#define NMGR_UWB_MTU_EXT (1023 - sizeof(struct _ieee_std_frame_t) - sizeof(uint16_t) - 2/*CRC*/)
-#define NMGR_UWB_FCTRL UWB_FCTRL_STD_DATA_FRAME
-#define NMGR_UWB_FCTRL_WACK (NMGR_UWB_FCTRL|UWB_FCTRL_ACK_REQUESTED)
+#define SMP_UWB_MTU_STD (128 -  sizeof(struct _ieee_std_frame_t) - sizeof(uint16_t) - 2/*CRC*/)
+#define SMP_UWB_MTU_EXT (1023 - sizeof(struct _ieee_std_frame_t) - sizeof(uint16_t) - 2/*CRC*/)
+#define SMP_UWB_FCTRL UWB_FCTRL_STD_DATA_FRAME
+#define SMP_UWB_FCTRL_WACK (SMP_UWB_FCTRL|UWB_FCTRL_ACK_REQUESTED)
 
 //! IEEE 802.15.4 standard data frame.
 typedef union {
 //! Structure of standard frame
-    struct _nmgr_uwb_header{
+    struct _smp_uwb_header{
         uint16_t fctrl;             //!< Frame control
         uint8_t seq_num;            //!< Sequence number, incremented for each new frame
         uint16_t PANID;             //!< PANID
@@ -60,26 +60,26 @@ typedef union {
         uint8_t  rpt_count;         //!< Repeat level
         uint8_t  rpt_max;           //!< Repeat max level
     }__attribute__((__packed__,aligned(1)));
-    uint8_t array[sizeof(struct _nmgr_uwb_header)];  //!< Array of size standard frame
-} nmgr_uwb_frame_header_t;
+    uint8_t array[sizeof(struct _smp_uwb_header)];  //!< Array of size standard frame
+} smp_uwb_frame_header_t;
 
-typedef struct _nmgr_uwb_instance_t {
+typedef struct _smp_uwb_instance_t {
     struct uwb_dev* dev_inst;
     uint8_t frame_seq_num;
     struct dpl_sem sem;
     struct os_mqueue tx_q;
-} nmgr_uwb_instance_t;
+} smp_uwb_instance_t;
 
-uint16_t nmgr_uwb_mtu(struct os_mbuf *m, int idx);
-nmgr_uwb_instance_t* nmgr_uwb_init(struct uwb_dev* inst);
-int nmgr_uwb_tx(struct _nmgr_uwb_instance_t *nmgruwb, uint16_t dst_addr, uint16_t code, struct os_mbuf *m, uint64_t dx_time);
+uint16_t smp_uwb_mtu(struct os_mbuf *m, int idx);
+smp_uwb_instance_t* smp_uwb_init(struct uwb_dev* inst);
+int smp_uwb_tx(struct _smp_uwb_instance_t *smpuwb, uint16_t dst_addr, uint16_t code, struct os_mbuf *m, uint64_t dx_time);
 
 /* Sychronous model */
-struct uwb_dev_status nmgr_uwb_listen(struct _nmgr_uwb_instance_t *nmgruwb, uwb_dev_modes_t mode, uint64_t delay, uint16_t timeout);
-int uwb_nmgr_process_tx_queue(struct _nmgr_uwb_instance_t *nmgruwb, uint64_t dx_time);
-int uwb_nmgr_queue_tx(struct _nmgr_uwb_instance_t *nmgruwb, uint16_t dst_addr, uint16_t code, struct os_mbuf *om);
+struct uwb_dev_status smp_uwb_listen(struct _smp_uwb_instance_t *smpuwb, uwb_dev_modes_t mode, uint64_t delay, uint16_t timeout);
+int uwb_smp_process_tx_queue(struct _smp_uwb_instance_t *smpuwb, uint64_t dx_time);
+int uwb_smp_queue_tx(struct _smp_uwb_instance_t *smpuwb, uint16_t dst_addr, uint16_t code, struct os_mbuf *om);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _NMGR_UWB_H_ */
+#endif /* _SMP_UWB_H_ */

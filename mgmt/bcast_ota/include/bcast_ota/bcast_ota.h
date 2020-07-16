@@ -46,7 +46,7 @@ int bcast_ota_get_packet(int src_slot, bcast_ota_mode_t mode, int max_transfer_u
                          struct os_mbuf **rsp, uint64_t flags);
 struct os_mbuf* bcast_ota_get_reset_mbuf(void);
 
-void bcast_ota_nmgr_module_init(void);
+void bcast_ota_smp_module_init(void);
 void bcast_ota_set_mpool(struct os_mbuf_pool *mbuf_pool);
 
 void bcast_ota_set_new_fw_cb(new_fw_cb *cb);

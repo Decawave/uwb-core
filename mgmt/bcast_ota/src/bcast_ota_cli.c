@@ -43,7 +43,7 @@
 #include <tinycbor/cbor_mbuf_reader.h>
 #include <cborattr/cborattr.h>
 
-#include <nmgr_os/nmgr_os.h>
+#include <smp_os/smp_os.h>
 
 #include <mgmt/mgmt.h>
 #include <newtmgr/newtmgr.h>
@@ -53,10 +53,10 @@
 #include <base64/hex.h>
 #include <base64/base64.h>
 
-#if MYNEWT_VAL(NMGR_UWB_ENABLED)
-#include <nmgr_uwb/nmgr_uwb.h>
+#if MYNEWT_VAL(SMP_UWB_ENABLED)
+#include <smp_uwb/smp_uwb.h>
 #endif
-static struct nmgr_transport nmgr_mstr_transport;
+static struct smp_transport smp_mstr_transport;
 
 static struct {
     int8_t reset;
@@ -71,13 +71,13 @@ static struct {
 
 
 static uint16_t
-nmgr_mstr_get_mtu(struct os_mbuf *m)
+smp_mstr_get_mtu(struct os_mbuf *m)
 {
     return 196;
 }
 
 static int
-nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
+smp_mstr_out(struct smp_transport *nt, struct os_mbuf *req)
 {
     int rc;
     int64_t rc_attr;
@@ -97,7 +97,7 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
         }
     };
     rc = 0;
-    cbor_mbuf_reader_init(&reader, req, sizeof(struct nmgr_hdr));
+    cbor_mbuf_reader_init(&reader, req, sizeof(struct smp_hdr));
     cbor_parser_init(&reader.r, 0, &n_b.parser, &n_b.it);
 
     struct mgmt_cbuf *cb = &n_b;
@@ -106,13 +106,13 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
     if (g_err) {
         streamer_printf(tx_im_inst.streamer, "gerr: '%d\n", g_err);
     }
-    streamer_printf(tx_im_inst.streamer, "#nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
+    streamer_printf(tx_im_inst.streamer, "#smp_out: rc=%d\n", (int)(rc_attr&0xffffffff));
 
 #if MYNEWT_VAL(BCAST_OTA_DEBUG)
     printf("json:\n=========\n");
     CborValue it;
     CborParser p;
-    cbor_mbuf_reader_init(&reader, req, sizeof(struct nmgr_hdr));
+    cbor_mbuf_reader_init(&reader, req, sizeof(struct smp_hdr));
     cbor_parser_init(&reader.r, 0, &p, &it);
 
     cbor_value_to_json(stdout, &it,
@@ -194,12 +194,12 @@ txim_ev_cb(struct os_event *ev)
         os_callout_reset(&tx_im_inst.callout, OS_TICKS_PER_SEC/10);
         return;
     }
-    nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
+    smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_SMP_UWB);
     bcast_ota_get_packet(tx_im_inst.slot_id, (tx_im_inst.reset>0)?
                          BCAST_MODE_RESET_OFFSET : BCAST_MODE_NONE,
                          tx_im_inst.blocksize, &om, tx_im_inst.flags);
     if (om) {
-        uwb_nmgr_queue_tx(nmgruwb, tx_im_inst.addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        uwb_smp_queue_tx(smpuwb, tx_im_inst.addr, UWB_DATA_CODE_SMP_REQUEST, om);
         if (tx_im_inst.reset>0) {
             os_callout_reset(&tx_im_inst.callout, OS_TICKS_PER_SEC/5);
             tx_im_inst.reset--;
@@ -211,7 +211,7 @@ txim_ev_cb(struct os_event *ev)
         streamer_printf(tx_im_inst.streamer, "bota: resending end\n");
         bcast_ota_get_packet(tx_im_inst.slot_id, BCAST_MODE_RESEND_END,
                              (128-8), &om, tx_im_inst.flags);
-        uwb_nmgr_queue_tx(nmgruwb, tx_im_inst.addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        uwb_smp_queue_tx(smpuwb, tx_im_inst.addr, UWB_DATA_CODE_SMP_REQUEST, om);
         os_callout_reset(&tx_im_inst.callout, OS_TICKS_PER_SEC/4);
     } else {
         streamer_printf(tx_im_inst.streamer, "bota: txim finished\n");
@@ -263,8 +263,8 @@ bota_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct streamer
         }
         uint16_t addr = strtol(argv[2], NULL, 0);
         struct os_mbuf *om = bcast_ota_get_reset_mbuf();
-        nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
-        uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_SMP_UWB);
+        uwb_smp_queue_tx(smpuwb, addr, UWB_DATA_CODE_SMP_REQUEST, om);
     } else {
         streamer_printf(streamer, "Unknown cmd\n");
     }
@@ -275,8 +275,8 @@ int
 bota_cli_register(void)
 {
     int rc;
-    rc = nmgr_transport_init(&nmgr_mstr_transport, nmgr_mstr_out,
-                             nmgr_mstr_get_mtu);
+    rc = smp_transport_init(&smp_mstr_transport, smp_mstr_out,
+                             smp_mstr_get_mtu);
     assert(rc == 0);
     os_callout_init(&tx_im_inst.callout, os_eventq_dflt_get(), txim_ev_cb, NULL);
 

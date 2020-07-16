@@ -28,7 +28,7 @@ pkg.deps:
     - "@apache-mynewt-core/sys/config"
 
 pkg.deps.UWBCFG_NMGR:
-    - "@apache-mynewt-core/mgmt/newtmgr"
+    - "@apache-mynewt-core/mgmt/mgmt"
 
 pkg.init:
   uwbcfg_pkg_init:    500

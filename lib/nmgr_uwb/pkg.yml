@@ -32,7 +32,7 @@ pkg.cflags:
 pkg.deps:
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/mgmt/mgmt"
-    - "@apache-mynewt-core/mgmt/newtmgr"
+    - "@apache-mynewt-core/mgmt/smp"
 
 pkg.init:
     nmgr_uwb_pkg_init: 410

@@ -20,13 +20,13 @@ syscfg.vals:
     UWB_CLI_BACKTRACE: 1
     IMGMGR_CLI: 0
     SHELL_TASK: 1
-    SHELL_NEWTMGR: 0
+    SHELL_SMP: 0
     NRNG_ENABLED: 0
     TWR_SS_NRNG_ENABLED: 0
     SURVEY_ENABLED: 0
     # Enable newtmgr commands.
-    STATS_NEWTMGR: 1
-    LOG_NEWTMGR: 1
+    STATS_SMP: 1
+    LOG_SMP: 1
 
     UWB_PAN_VERSION_ENABLED: 0
     DW3000_PKG_INIT_LOG: 1

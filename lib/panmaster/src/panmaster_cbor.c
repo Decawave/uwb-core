@@ -57,7 +57,7 @@ cbor_nodes_list(struct CborEncoder *encoder)
         return 0;
     }
 
-    char ver_str[IMGMGR_NMGR_MAX_VER];
+    char ver_str[IMGMGR_SMP_MAX_VER];
     int num_nodes;
 
     cbor_encoder_create_map(encoder, &payload_enc, CborIndefiniteLength);

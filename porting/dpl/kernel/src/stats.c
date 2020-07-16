@@ -151,7 +151,7 @@ stats_module_init_internal(void)
         return rc;
     }
 
-#if MYNEWT_VAL(STATS_NEWTMGR)
+#if MYNEWT_VAL(STATS_SMP)
     //rc = stats_nmgr_register_group();
     if (rc) {
         return rc;

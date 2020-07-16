@@ -495,7 +495,7 @@ shell_process_command(char *line, struct streamer *streamer)
     shell_exec(argc, argv, streamer);
 }
 
-#if MYNEWT_VAL(SHELL_NEWTMGR)
+#if MYNEWT_VAL(SHELL_SMP)
 static void
 shell_process_nlip_line(char *shell_line, struct streamer *streamer)
 {
@@ -538,7 +538,7 @@ shell(struct dpl_event *ev)
 
     streamer = streamer_console_get();
 
-#if MYNEWT_VAL(SHELL_NEWTMGR)
+#if MYNEWT_VAL(SHELL_SMP)
     shell_process_nlip_line(cmd->line, streamer);
 #else
     shell_process_command(cmd->line, streamer);
@@ -1037,7 +1037,7 @@ shell_init(void)
 
     prompt = SHELL_PROMPT;
 
-#if MYNEWT_VAL(SHELL_NEWTMGR)
+#if MYNEWT_VAL(SHELL_SMP)
     shell_nlip_init();
 #endif
 

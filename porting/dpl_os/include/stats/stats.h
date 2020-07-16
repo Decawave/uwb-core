@@ -203,8 +203,8 @@ int stats_group_walk(stats_group_walk_func_t, void *);
 struct stats_hdr *stats_group_find(const char *name);
 
 /* Private */
-#if MYNEWT_VAL(STATS_NEWTMGR)
-int stats_nmgr_register_group(void);
+#if MYNEWT_VAL(STATS_SMP)
+int stats_smp_register_group(void);
 #endif
 #if MYNEWT_VAL(STATS_CLI)
 int stats_shell_register(void);

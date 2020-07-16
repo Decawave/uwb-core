@@ -19,7 +19,7 @@
 
 #include "syscfg/syscfg.h"
 
-#if MYNEWT_VAL(SHELL_NEWTMGR) && 0
+#if MYNEWT_VAL(SHELL_SMP) && 0
 #include <stddef.h>
 #include "base64/base64.h"
 #include "crc/crc16.h"

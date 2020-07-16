@@ -32,7 +32,7 @@ struct streamer;
 struct shell_cmd;
 
 /** Command IDs in the "shell" newtmgr group. */
-#define SHELL_NMGR_OP_EXEC      0
+#define SHELL_SMP_OP_EXEC      0
 
 /** @brief Callback called when command is entered.
  *
@@ -165,7 +165,7 @@ void shell_evq_set(struct dpl_eventq *evq);
  */
 int shell_exec(int argc, char **argv, struct streamer *streamer);
 
-#if MYNEWT_VAL(SHELL_NEWTMGR)
+#if MYNEWT_VAL(SHELL_SMP)
 struct dpl_mbuf;
 typedef int (*shell_nlip_input_func_t)(struct dpl_mbuf *, void *arg);
 int shell_nlip_input_register(shell_nlip_input_func_t nf, void *arg);

@@ -27,8 +27,8 @@ pkg.deps:
     - "@decawave-uwb-core/hw/drivers/uwb"
     - "@apache-mynewt-core/sys/config"
 
-pkg.deps.UWBCFG_NMGR:
-    - "@apache-mynewt-core/mgmt/newtmgr"
+pkg.deps.UWBCFG_SMP:
+    - "@apache-mynewt-core/mgmt/smp"
 
 pkg.init:
   uwbcfg_pkg_init:    500

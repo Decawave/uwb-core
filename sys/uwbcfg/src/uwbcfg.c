@@ -351,8 +351,8 @@ uwbcfg_pkg_init(void)
 
     SLIST_INIT(&uwbcfg_callbacks);
 
-#if MYNEWT_VAL(UWBCFG_NMGR)
-    uwbcfg_nmgr_module_init();
+#if MYNEWT_VAL(UWBCFG_SMP)
+    uwbcfg_smp_module_init();
 #endif
 
 #if MYNEWT_VAL(UWBCFG_CLI)

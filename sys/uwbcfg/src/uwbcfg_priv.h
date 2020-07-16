@@ -80,7 +80,7 @@ int uwbcfg_commit_to_inst_dw3000(struct uwb_dev * inst, char cfg[CFGSTR_MAX][CFG
 char* uwbcfg_internal_get(int idx);
 int uwbcfg_internal_set(int idx, char* val);
 int uwbcfg_commit(void);
-void uwbcfg_nmgr_module_init(void);
+void uwbcfg_smp_module_init(void);
 int uwbcfg_cli_register(void);
 void uwbcfg_sysfs_init(void);
 void uwbcfg_sysfs_deinit(void);

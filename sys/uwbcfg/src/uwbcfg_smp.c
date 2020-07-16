@@ -20,7 +20,7 @@
 
 #include <syscfg/syscfg.h>
 
-#if MYNEWT_VAL(UWBCFG_NMGR)
+#if MYNEWT_VAL(UWBCFG_SMP)
 
 #include <limits.h>
 #include <assert.h>
@@ -39,17 +39,17 @@
 static int uwbcfg_write(struct mgmt_cbuf *);
 //static int uwbcfg_read(struct mgmt_cbuf *);
 
-static const struct mgmt_handler uwbcfg_nmgr_handlers[] = {
+static const struct mgmt_handler uwbcfg_smp_handlers[] = {
     [0] = {
         .mh_write = uwbcfg_write
     }
 };
 
 #define UWBCFG_HANDLER_CNT                                                \
-    sizeof(uwbcfg_nmgr_handlers) / sizeof(uwbcfg_nmgr_handlers[0])
+    sizeof(uwbcfg_smp_handlers) / sizeof(uwbcfg_smp_handlers[0])
 
-static struct mgmt_group uwbcfg_nmgr_group = {
-    .mg_handlers = (struct mgmt_handler *)uwbcfg_nmgr_handlers,
+static struct mgmt_group uwbcfg_smp_group = {
+    .mg_handlers = (struct mgmt_handler *)uwbcfg_smp_handlers,
     .mg_handlers_count = UWBCFG_HANDLER_CNT,
     .mg_group_id = MGMT_GROUP_ID_UWBCFG,
 };
@@ -126,15 +126,15 @@ out:
 
 
 void
-uwbcfg_nmgr_module_init(void)
+uwbcfg_smp_module_init(void)
 {
     int rc;
 
     /* Ensure this function only gets called by sysinit. */
     SYSINIT_ASSERT_ACTIVE();
 
-    rc = mgmt_group_register(&uwbcfg_nmgr_group);
+    rc = mgmt_group_register(&uwbcfg_smp_group);
     SYSINIT_PANIC_ASSERT(rc == 0);
 }
 
-#endif // MYNEWT_VAL(UWBCFG_NMGR)
+#endif // MYNEWT_VAL(UWBCFG_SMP)

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-pkg.name: lib/nmgr_cmds
+pkg.name: lib/smp_cmds
 pkg.description: TWR library superset
 pkg.author: "UWB Core <uwbcore@gmail.com>"
 pkg.homepage: "http://www.decawave.com/"
@@ -38,4 +38,4 @@ pkg.deps:
     - "@apache-mynewt-core/mgmt/newtmgr"
 
 pkg.init:
-    nmgr_cmds_pkg_init: 411
+    smp_cmds_pkg_init: 411

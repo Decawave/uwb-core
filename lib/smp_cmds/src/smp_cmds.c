@@ -18,7 +18,7 @@
  */
 
 /**
- * @file nmgr_cmds.c
+ * @file smp_cmds.c
  * @author UWB Core <uwbcore@gmail.com>
  * @date 2018
  * @brief
@@ -43,7 +43,7 @@
 #include <mgmt/mgmt.h>
 #include <newtmgr/newtmgr.h>
 #include "console/console.h"
-#include <nmgr_os/nmgr_os.h>
+#include <smp_os/smp_os.h>
 #include <mgmt/mgmt.h>
 #include <imgmgr/imgmgr.h>
 #include <bootutil/image.h>
@@ -53,17 +53,17 @@
 #include <tinycbor/cbor_mbuf_writer.h>
 #include <tinycbor/cbor_mbuf_reader.h>
 #include <cborattr/cborattr.h>
-#include <nmgr_uwb/nmgr_uwb.h>
-#include <nmgr_cmds/nmgr_cmds.h>
+#include <smp_uwb/smp_uwb.h>
+#include <smp_cmds/smp_cmds.h>
 
 #include "shell/shell.h"
 #include "base64/hex.h"
 
-#define IMG_UPLOAD_CBOR_OVERHEAD (sizeof(struct nmgr_hdr) + sizeof("\"data\"") + sizeof("\"len\"") \
+#define IMG_UPLOAD_CBOR_OVERHEAD (sizeof(struct smp_hdr) + sizeof("\"data\"") + sizeof("\"len\"") \
                                  + sizeof("\"off\"") + sizeof(uint32_t) + sizeof(uint32_t)) //Length of "len" + "off" + "data"
 #define RETRY_COUNT 5
 #define INITIAL_OS_MBUF_SIZE 256
-#define NMGR_CMD_STACK_SIZE 1024
+#define SMP_CMD_STACK_SIZE 1024
 
 //#define DIAGMSG(s,u) printf(s,u)
 #ifndef DIAGMSG
@@ -73,28 +73,28 @@
 static bool rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs);
 static bool rx_timeout_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs);
 
-static int nmgr_uwb_img_upload(int argc, char** argv);
-static int nmgr_uwb_img_list(int argc, char** argv);
-static int nmgr_uwb_img_set_state(int argc, char** argv);
-static int nmgr_uwb_remote_config(int argc, char** argv);
+static int smp_uwb_img_upload(int argc, char** argv);
+static int smp_uwb_img_list(int argc, char** argv);
+static int smp_uwb_img_set_state(int argc, char** argv);
+static int smp_uwb_remote_config(int argc, char** argv);
 static struct os_mbuf* buf_to_imgmgr_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size);
 
 static struct uwb_mac_interface g_cbs[] = {
         [0] = {
-            .id = UWBEXT_NMGR_CMD,
+            .id = UWBEXT_SMP_CMD,
             .rx_complete_cb = rx_complete_cb,
             .rx_timeout_cb = rx_timeout_cb,
         },
 #if MYNEWT_VAL(UWB_DEVICE_1)
         [1] = {
-            .id = UWBEXT_NMGR_CMD,
+            .id = UWBEXT_SMP_CMD,
             .rx_complete_cb = rx_complete_cb,
             .rx_timeout_cb = rx_timeout_cb,
         },
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_2)
         [2] = {
-            .id = UWBEXT_NMGR_CMD,
+            .id = UWBEXT_SMP_CMD,
             .rx_complete_cb = rx_complete_cb,
             .rx_timeout_cb = rx_timeout_cb,
         }
@@ -123,22 +123,22 @@ struct shell_cmd_help help[] = {
 static struct shell_cmd cli_cmds[] = {
     {
         .sc_cmd = "img_upload",
-        .sc_cmd_func = nmgr_uwb_img_upload,
+        .sc_cmd_func = smp_uwb_img_upload,
         .help = &help[0],
     },
     {
         .sc_cmd = "img_set_state",
-        .sc_cmd_func = nmgr_uwb_img_set_state,
+        .sc_cmd_func = smp_uwb_img_set_state,
         .help = &help[1],
     },
     {
         .sc_cmd = "img_list",
-        .sc_cmd_func = nmgr_uwb_img_list,
+        .sc_cmd_func = smp_uwb_img_list,
         .help = &help[2],
     },
     {
         .sc_cmd = "remcfg",
-        .sc_cmd_func = nmgr_uwb_remote_config,
+        .sc_cmd_func = smp_uwb_remote_config,
         .help = &help[3],
     },
 };
@@ -153,86 +153,86 @@ static struct shell_cmd cli_cmds[] = {
  */
 static void rx_post_process(struct os_event* ev);
 
-typedef struct _nmgr_cmd_instance_t {
+typedef struct _smp_cmd_instance_t {
     struct os_sem cmd_sem;
     struct os_event rx_event;
     struct mgmt_cbuf n_b;
     struct cbor_mbuf_writer writer;
     struct cbor_mbuf_reader reader;
     CborEncoder payload_enc;
-    struct os_eventq nmgr_eventq;
-    struct os_task nmgr_task;
+    struct os_eventq smp_eventq;
+    struct os_task smp_task;
     uint16_t repeat_mode;
     uint16_t rem_len;
     uint16_t cmd_id;
     uint32_t curr_off;
     uint8_t err_status;
     uint8_t frame_seq_num;
-    uint8_t nmgr_cmd_seq_num;
+    uint8_t smp_cmd_seq_num;
     struct os_mbuf *rx_pkt;
     os_stack_t *pstack;
     struct uwb_dev* dev_inst;
-}nmgr_cmd_instance_t;
+}smp_cmd_instance_t;
 
-static nmgr_cmd_instance_t *nmgr_inst = NULL;
+static smp_cmd_instance_t *smp_inst = NULL;
 
 static void
-nmgr_cmd_task(void *arg);
+smp_cmd_task(void *arg);
 
-void nmgr_cmds_pkg_init(void){
+void smp_cmds_pkg_init(void){
 
     printf("{\"utime\": %lu,\"msg\": \"cmd_pkg_init\"}\n",os_cputime_ticks_to_usecs(os_cputime_get32()));
-    nmgr_inst = (nmgr_cmd_instance_t*)malloc(sizeof(nmgr_cmd_instance_t));
-    memset(nmgr_inst, 0x00, sizeof(nmgr_cmd_instance_t));
+    smp_inst = (smp_cmd_instance_t*)malloc(sizeof(smp_cmd_instance_t));
+    memset(smp_inst, 0x00, sizeof(smp_cmd_instance_t));
 
 #if MYNEWT_VAL(UWB_DEVICE_0)
     SYSINIT_ASSERT_ACTIVE();
-    g_cbs[0].inst_ptr = nmgr_inst->dev_inst = uwb_dev_idx_lookup(0);
+    g_cbs[0].inst_ptr = smp_inst->dev_inst = uwb_dev_idx_lookup(0);
     uwb_mac_append_interface(g_cbs[0].inst_ptr, &g_cbs[0]);
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_1)
     SYSINIT_ASSERT_ACTIVE();
-    g_cbs[1].inst_ptr = nmgr_inst->dev_inst = uwb_dev_idx_lookup(1);
+    g_cbs[1].inst_ptr = smp_inst->dev_inst = uwb_dev_idx_lookup(1);
     uwb_mac_append_interface(g_cbs[1].inst_ptr, &g_cbs[1]);
 #endif
 #if MYNEWT_VAL(UWB_DEVICE_2)
     SYSINIT_ASSERT_ACTIVE();
-    g_cbs[2].inst_ptr = nmgr_inst->dev_inst = uwb_dev_idx_lookup(2);
+    g_cbs[2].inst_ptr = smp_inst->dev_inst = uwb_dev_idx_lookup(2);
     uwb_mac_append_interface(g_cbs[2].inst_ptr, &g_cbs[2]);
 #endif
     for(int i =0; i < CLI_CMD_NUM; i++)
         shell_cmd_register(&cli_cmds[i]);
 
-    os_sem_init(&nmgr_inst->cmd_sem, 0x1);
+    os_sem_init(&smp_inst->cmd_sem, 0x1);
 
-    os_eventq_init(&nmgr_inst->nmgr_eventq);
+    os_eventq_init(&smp_inst->smp_eventq);
 
-    nmgr_inst->pstack = malloc(sizeof(os_stack_t)*OS_STACK_ALIGN(NMGR_CMD_STACK_SIZE));
-    os_task_init(&nmgr_inst->nmgr_task, "nmgr_cmd_task",
-            nmgr_cmd_task,
+    smp_inst->pstack = malloc(sizeof(os_stack_t)*OS_STACK_ALIGN(SMP_CMD_STACK_SIZE));
+    os_task_init(&smp_inst->smp_task, "smp_cmd_task",
+            smp_cmd_task,
             NULL,
             8,
             OS_WAIT_FOREVER,
-            nmgr_inst->pstack,
-            OS_STACK_ALIGN(NMGR_CMD_STACK_SIZE));
+            smp_inst->pstack,
+            OS_STACK_ALIGN(SMP_CMD_STACK_SIZE));
 
     /* Prepare post process event */
-    nmgr_inst->rx_event.ev_cb  = rx_post_process;
-    nmgr_inst->rx_event.ev_arg = (void*)nmgr_inst;
+    smp_inst->rx_event.ev_cb  = rx_post_process;
+    smp_inst->rx_event.ev_arg = (void*)smp_inst;
 }
 
 
 static void
-nmgr_cmd_task(void *arg)
+smp_cmd_task(void *arg)
 {
-    struct os_eventq *nmgr_eventq = &nmgr_inst->nmgr_eventq;
+    struct os_eventq *smp_eventq = &smp_inst->smp_eventq;
     while(1){
-        os_eventq_run(nmgr_eventq);
+        os_eventq_run(smp_eventq);
     }
 }
 
 static int
-nmgr_uwb_img_upload(int argc, char** argv){
+smp_uwb_img_upload(int argc, char** argv){
 
     int slot_num = 0;
     if(argc < 3){
@@ -243,20 +243,20 @@ nmgr_uwb_img_upload(int argc, char** argv){
     else if(strcmp(argv[1],"slot2") == 0)
         slot_num = 1;
 
-    assert(nmgr_inst);
+    assert(smp_inst);
     uint16_t dst_add = strtol(argv[2], NULL, 16);
     if (!dst_add) {
         console_printf("Dst addr needed\n");
         return 1;
     }
 
-    struct uwb_dev * inst = nmgr_inst->dev_inst;
+    struct uwb_dev * inst = smp_inst->dev_inst;
 
     uint8_t retries = 0;
     int  len = 0;
     uint32_t flags =0, off = 0;
     struct os_mbuf *rsp =  NULL;
-    uint8_t buf[NMGR_UWB_MTU_STD - IMG_UPLOAD_CBOR_OVERHEAD];
+    uint8_t buf[SMP_UWB_MTU_STD - IMG_UPLOAD_CBOR_OVERHEAD];
     const struct flash_area *s_fa;
     struct image_version ver;
     int fa_id = flash_area_id_from_image_slot(slot_num);
@@ -267,7 +267,7 @@ nmgr_uwb_img_upload(int argc, char** argv){
     flash_area_open(fa_id, &s_fa);
     while(off < s_fa->fa_size){
 
-        os_error_t err = os_sem_pend(&nmgr_inst->cmd_sem, OS_TIMEOUT_NEVER);
+        os_error_t err = os_sem_pend(&smp_inst->cmd_sem, OS_TIMEOUT_NEVER);
         assert(err == OS_OK);
         if (off < s_fa->fa_size) {
             len = (int)s_fa->fa_size - (int)off;
@@ -284,35 +284,35 @@ nmgr_uwb_img_upload(int argc, char** argv){
             rsp = NULL;
         }
 
-        nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(inst, UWBEXT_NMGR_UWB);
-        int rc = uwb_nmgr_queue_tx(nmgruwb, dst_add, 0, rsp);
+        smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(inst, UWBEXT_SMP_UWB);
+        int rc = uwb_smp_queue_tx(smpuwb, dst_add, 0, rsp);
         if (rc) {
             /* Failed to send */
             os_time_delay(OS_TICKS_PER_SEC/10);
         }
 
-        err = os_sem_pend(&nmgr_inst->cmd_sem, OS_TIMEOUT_NEVER);
-        err |= os_sem_release(&nmgr_inst->cmd_sem);
+        err = os_sem_pend(&smp_inst->cmd_sem, OS_TIMEOUT_NEVER);
+        err |= os_sem_release(&smp_inst->cmd_sem);
         assert(err == OS_OK);
-        if(nmgr_inst->err_status != 0){
+        if(smp_inst->err_status != 0){
             if(inst->status.rx_timeout_error){
                 retries++;
                 inst->status.rx_timeout_error = 0;
                 if(retries > RETRY_COUNT){
-                    nmgr_inst->curr_off = 0;
+                    smp_inst->curr_off = 0;
                     goto err;
                 }else
                     off -= len;
             }else{
-                printf("Err %d occured \n", nmgr_inst->err_status);
+                printf("Err %d occured \n", smp_inst->err_status);
                 printf("Refer to mgmt.h for more info \n");
-                nmgr_inst->curr_off = 0;
+                smp_inst->curr_off = 0;
                 goto err;
             }
         }else{
             retries = 0;
             //If the offset was wrong then update the offset with the received offset
-            off = nmgr_inst->curr_off;
+            off = smp_inst->curr_off;
             printf("\b\b\b\b\b\b%ld%%", ((uint32_t)((off * 100)/s_fa->fa_size)));
         }
     }
@@ -322,34 +322,34 @@ err:
 }
 
 static int
-nmgr_uwb_img_list(int argc, char** argv){
+smp_uwb_img_list(int argc, char** argv){
 
     if(argc < 2){
         return -1;
     }
     struct os_mbuf* om = os_msys_get_pkthdr(10, 40);
-    struct nmgr_hdr *hdr = (struct nmgr_hdr *) os_mbuf_extend(om, sizeof(struct nmgr_hdr));
+    struct smp_hdr *hdr = (struct smp_hdr *) os_mbuf_extend(om, sizeof(struct smp_hdr));
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_READ;
+    hdr->nh_op = SMP_OP_READ;
     hdr->nh_group = htons(MGMT_GROUP_ID_IMAGE);
-    hdr->nh_seq = nmgr_inst->nmgr_cmd_seq_num++;
-    hdr->nh_id = IMGMGR_NMGR_ID_STATE;
+    hdr->nh_seq = smp_inst->smp_cmd_seq_num++;
+    hdr->nh_id = IMGMGR_SMP_ID_STATE;
     uint16_t dst_addr = strtol(argv[1], NULL, 16);
     if (!dst_addr) {
         console_printf("Dst addr needed\n");
         return 1;
     }
 
-    nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
-    assert(nmgruwb);
-    uwb_nmgr_queue_tx(nmgruwb, dst_addr, 0, om);
+    smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_SMP_UWB);
+    assert(smpuwb);
+    uwb_smp_queue_tx(smpuwb, dst_addr, 0, om);
     return 0;
 }
 
 static int
-nmgr_uwb_img_set_state(int argc, char** argv){
-    assert(nmgr_inst);
+smp_uwb_img_set_state(int argc, char** argv){
+    assert(smp_inst);
 
     if(strcmp(argv[1], "test") == 0 && argc < 3){
         printf("Please provide the hash of the image to be tested \n");
@@ -361,24 +361,24 @@ nmgr_uwb_img_set_state(int argc, char** argv){
     uint16_t dst_add = 0x0000;
 
     int rc = 0;
-    struct os_mbuf* tx_pkt = os_msys_get_pkthdr(NMGR_UWB_MTU_STD - sizeof(struct nmgr_hdr), 0);
-    struct nmgr_hdr *hdr = os_mbuf_extend(tx_pkt, sizeof(struct nmgr_hdr));
+    struct os_mbuf* tx_pkt = os_msys_get_pkthdr(SMP_UWB_MTU_STD - sizeof(struct smp_hdr), 0);
+    struct smp_hdr *hdr = os_mbuf_extend(tx_pkt, sizeof(struct smp_hdr));
 
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_WRITE;
+    hdr->nh_op = SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_IMAGE);
-    hdr->nh_seq = nmgr_inst->nmgr_cmd_seq_num++;
-    hdr->nh_id = IMGMGR_NMGR_ID_STATE;
+    hdr->nh_seq = smp_inst->smp_cmd_seq_num++;
+    hdr->nh_id = IMGMGR_SMP_ID_STATE;
 
-    cbor_mbuf_writer_init(&nmgr_inst->writer, tx_pkt);
-    cbor_encoder_init(&nmgr_inst->n_b.encoder, &nmgr_inst->writer.enc, 0);
-    rc = cbor_encoder_create_map(&nmgr_inst->n_b.encoder, &nmgr_inst->payload_enc, CborIndefiniteLength);
+    cbor_mbuf_writer_init(&smp_inst->writer, tx_pkt);
+    cbor_encoder_init(&smp_inst->n_b.encoder, &smp_inst->writer.enc, 0);
+    rc = cbor_encoder_create_map(&smp_inst->n_b.encoder, &smp_inst->payload_enc, CborIndefiniteLength);
     if (rc != 0) {
         printf("could not create map\n");
         return 0;
     }
-    struct mgmt_cbuf *cb = &nmgr_inst->n_b;
+    struct mgmt_cbuf *cb = &smp_inst->n_b;
 
     CborError g_err = CborNoError;
     if(strcmp(argv[1], "test") == 0){
@@ -395,17 +395,17 @@ nmgr_uwb_img_set_state(int argc, char** argv){
         g_err |= cbor_encode_text_stringz(&cb->encoder, "confirm");
         g_err |= cbor_encode_boolean(&cb->encoder, true);
     }
-    rc = cbor_encoder_close_container(&nmgr_inst->n_b.encoder, &nmgr_inst->payload_enc);
+    rc = cbor_encoder_close_container(&smp_inst->n_b.encoder, &smp_inst->payload_enc);
     if (rc != 0) {
         printf("could not close container\n");
         return 0;
     }
-    hdr->nh_len += cbor_encode_bytes_written(&nmgr_inst->n_b.encoder);
+    hdr->nh_len += cbor_encode_bytes_written(&smp_inst->n_b.encoder);
     hdr->nh_len = htons(hdr->nh_len);
 
-    nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
-    assert(nmgruwb);
-    uwb_nmgr_queue_tx(nmgruwb, dst_add, 0, tx_pkt);
+    smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_SMP_UWB);
+    assert(smpuwb);
+    uwb_smp_queue_tx(smpuwb, dst_add, 0, tx_pkt);
     return 0;
 }
 
@@ -419,23 +419,23 @@ buf_to_imgmgr_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size)
         return 0;
     }
 
-    struct nmgr_hdr *hdr = os_mbuf_extend(tx_pkt, sizeof(struct nmgr_hdr));
+    struct smp_hdr *hdr = os_mbuf_extend(tx_pkt, sizeof(struct smp_hdr));
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_WRITE;
+    hdr->nh_op = SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_IMAGE);
-    hdr->nh_seq = nmgr_inst->nmgr_cmd_seq_num++;
-    hdr->nh_id = IMGMGR_NMGR_ID_UPLOAD;
+    hdr->nh_seq = smp_inst->smp_cmd_seq_num++;
+    hdr->nh_id = IMGMGR_SMP_ID_UPLOAD;
 
-    cbor_mbuf_writer_init(&nmgr_inst->writer, tx_pkt);
-    cbor_encoder_init(&nmgr_inst->n_b.encoder, &nmgr_inst->writer.enc, 0);
-    rc = cbor_encoder_create_map(&nmgr_inst->n_b.encoder, &nmgr_inst->payload_enc, CborIndefiniteLength);
+    cbor_mbuf_writer_init(&smp_inst->writer, tx_pkt);
+    cbor_encoder_init(&smp_inst->n_b.encoder, &smp_inst->writer.enc, 0);
+    rc = cbor_encoder_create_map(&smp_inst->n_b.encoder, &smp_inst->payload_enc, CborIndefiniteLength);
     if (rc != 0) {
         printf("could not create map\n");
         return 0;
     }
 
-    struct mgmt_cbuf *cb = &nmgr_inst->n_b;
+    struct mgmt_cbuf *cb = &smp_inst->n_b;
 
     CborError g_err = CborNoError;
     g_err |= cbor_encode_text_stringz(&cb->encoder, "len");
@@ -445,12 +445,12 @@ buf_to_imgmgr_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size)
     g_err |= cbor_encode_text_stringz(&cb->encoder, "data");
     g_err |= cbor_encode_byte_string(&cb->encoder, buf, len);
 
-    rc = cbor_encoder_close_container(&nmgr_inst->n_b.encoder, &nmgr_inst->payload_enc);
+    rc = cbor_encoder_close_container(&smp_inst->n_b.encoder, &smp_inst->payload_enc);
     if (rc != 0) {
         printf("could not close container\n");
         return 0;
     }
-    hdr->nh_len += cbor_encode_bytes_written(&nmgr_inst->n_b.encoder);
+    hdr->nh_len += cbor_encode_bytes_written(&smp_inst->n_b.encoder);
     hdr->nh_len = htons(hdr->nh_len);
 
     return tx_pkt;
@@ -463,7 +463,7 @@ get_txcfg_mbuf(char *name_str, char *value_str)
     CborEncoder payload_enc;
     struct mgmt_cbuf n_b;
     struct cbor_mbuf_writer writer;
-    struct nmgr_hdr *hdr;
+    struct smp_hdr *hdr;
     struct os_mbuf *rsp;
 
     rsp = os_msys_get_pkthdr(0, 0);
@@ -471,16 +471,16 @@ get_txcfg_mbuf(char *name_str, char *value_str)
         return 0;
     }
 
-    hdr = (struct nmgr_hdr *) os_mbuf_extend(rsp, sizeof(struct nmgr_hdr));
+    hdr = (struct smp_hdr *) os_mbuf_extend(rsp, sizeof(struct smp_hdr));
     if (!hdr) {
         goto exit_err;
     }
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = (!value_str)? NMGR_OP_READ : NMGR_OP_WRITE;
+    hdr->nh_op = (!value_str)? SMP_OP_READ : SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_CONFIG);
     hdr->nh_seq = 0;
-    hdr->nh_id = CONF_NMGR_OP;
+    hdr->nh_id = CONF_SMP_OP;
 
     cbor_mbuf_writer_init(&writer, rsp);
     cbor_encoder_init(&n_b.encoder, &writer.enc, 0);
@@ -517,7 +517,7 @@ exit_err:
 }
 
 static int
-nmgr_uwb_remote_config(int argc, char** argv)
+smp_uwb_remote_config(int argc, char** argv)
 {
     uint16_t dst_addr;
     char *name_str;
@@ -538,9 +538,9 @@ nmgr_uwb_remote_config(int argc, char** argv)
     }
 
     struct os_mbuf *om = get_txcfg_mbuf(name_str, val_str);
-    nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_NMGR_UWB);
-    assert(nmgruwb);
-    uwb_nmgr_queue_tx(nmgruwb, dst_addr, 0, om);
+    smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(uwb_dev_idx_lookup(0), UWBEXT_SMP_UWB);
+    assert(smpuwb);
+    uwb_smp_queue_tx(smpuwb, dst_addr, 0, om);
     return 0;
 }
 
@@ -558,10 +558,10 @@ rx_timeout_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
     if (strncmp((char*)&inst->fctrl, "NM", 2)){
         return false;
     }
-    nmgr_inst->err_status = 1;
-    nmgr_inst->repeat_mode = 0;
-    if(os_sem_get_count(&nmgr_inst->cmd_sem) == 0)
-        os_sem_release(&nmgr_inst->cmd_sem);
+    smp_inst->err_status = 1;
+    smp_inst->repeat_mode = 0;
+    if(os_sem_get_count(&smp_inst->cmd_sem) == 0)
+        os_sem_release(&smp_inst->cmd_sem);
     return false;
 }
 
@@ -575,19 +575,19 @@ rx_timeout_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 static bool
 rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
-    if(inst->fctrl != NMGR_UWB_FCTRL) {
+    if(inst->fctrl != SMP_UWB_FCTRL) {
         return false;
     }
-    nmgr_uwb_frame_header_t *frame = (nmgr_uwb_frame_header_t*)inst->rxbuf;
-    if(frame->code < UWB_DATA_CODE_NMGR_INVALID ||
-       frame->code > UWB_DATA_CODE_NMGR_END) {
+    smp_uwb_frame_header_t *frame = (smp_uwb_frame_header_t*)inst->rxbuf;
+    if(frame->code < UWB_DATA_CODE_SMP_INVALID ||
+       frame->code > UWB_DATA_CODE_SMP_END) {
         return false;
     }
 
     if(inst->my_short_address != frame->dst_address){
         return true;
     }else{
-        os_eventq_put(&nmgr_inst->nmgr_eventq, &nmgr_inst->rx_event);
+        os_eventq_put(&smp_inst->smp_eventq, &smp_inst->rx_event);
     }
     return true;
 }
@@ -595,52 +595,52 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 static void
 rx_post_process(struct os_event* ev)
 {
-    // nmgr_inst = (struct _nmgr_cmd_instance_t*)ev->ev_arg;
-    nmgr_uwb_frame_t *frame = (nmgr_uwb_frame_t*)nmgr_inst->dev_inst->rxbuf;
+    // smp_inst = (struct _smp_cmd_instance_t*)ev->ev_arg;
+    smp_uwb_frame_t *frame = (smp_uwb_frame_t*)smp_inst->dev_inst->rxbuf;
 
-    //There is a chance that the response could be split if the total length is more than NMGR_UWB_MTU
+    //There is a chance that the response could be split if the total length is more than SMP_UWB_MTU
     //If so then do the decoding only after the entire packet is received
-    if(nmgr_inst->repeat_mode == 0){
-        nmgr_inst->rx_pkt = os_msys_get_pkthdr(htons(frame->hdr.nh_len), 0);
-        if(nmgr_inst->rx_pkt == NULL){
-            nmgr_inst->err_status = -1;
-            if(os_sem_get_count(&nmgr_inst->cmd_sem) == 0)
-                os_sem_release(&nmgr_inst->cmd_sem);
+    if(smp_inst->repeat_mode == 0){
+        smp_inst->rx_pkt = os_msys_get_pkthdr(htons(frame->hdr.nh_len), 0);
+        if(smp_inst->rx_pkt == NULL){
+            smp_inst->err_status = -1;
+            if(os_sem_get_count(&smp_inst->cmd_sem) == 0)
+                os_sem_release(&smp_inst->cmd_sem);
             return;
         }
         //Trim out the uwb frame header
-        int rc = os_mbuf_copyinto(nmgr_inst->rx_pkt, 0, &frame->array[sizeof(struct _nmgr_uwb_header)], nmgr_inst->dev_inst->frame_len - sizeof(struct _nmgr_uwb_header));
+        int rc = os_mbuf_copyinto(smp_inst->rx_pkt, 0, &frame->array[sizeof(struct _smp_uwb_header)], smp_inst->dev_inst->frame_len - sizeof(struct _smp_uwb_header));
         assert(rc==0);
 
-        if(htons(frame->hdr.nh_len) > NMGR_UWB_MTU_EXT && 0){
-            nmgr_inst->repeat_mode = 1;
-            nmgr_inst->rem_len = (htons(frame->hdr.nh_len) + sizeof(struct nmgr_hdr)) - OS_MBUF_PKTLEN(nmgr_inst->rx_pkt);
-            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128) + 0x600;
-            uwb_set_rx_timeout(nmgr_inst->dev_inst, timeout);
-            uwb_start_rx(nmgr_inst->dev_inst);
+        if(htons(frame->hdr.nh_len) > SMP_UWB_MTU_EXT && 0){
+            smp_inst->repeat_mode = 1;
+            smp_inst->rem_len = (htons(frame->hdr.nh_len) + sizeof(struct smp_hdr)) - OS_MBUF_PKTLEN(smp_inst->rx_pkt);
+            uint16_t timeout = uwb_phy_frame_duration(smp_inst->dev_inst, 128) + 0x600;
+            uwb_set_rx_timeout(smp_inst->dev_inst, timeout);
+            uwb_start_rx(smp_inst->dev_inst);
         }
-        nmgr_inst->cmd_id = frame->hdr.nh_id;
+        smp_inst->cmd_id = frame->hdr.nh_id;
     }
     else{
-        nmgr_inst->rem_len -= (nmgr_inst->dev_inst->frame_len - sizeof(struct _nmgr_uwb_header));
-        if(nmgr_inst->rem_len == 0)
-            nmgr_inst->repeat_mode = 0;
+        smp_inst->rem_len -= (smp_inst->dev_inst->frame_len - sizeof(struct _smp_uwb_header));
+        if(smp_inst->rem_len == 0)
+            smp_inst->repeat_mode = 0;
         else{
-            uint16_t timeout = uwb_phy_frame_duration(nmgr_inst->dev_inst, 128) + 0x600;
-            uwb_set_rx_timeout(nmgr_inst->dev_inst, timeout);
-            uwb_start_rx(nmgr_inst->dev_inst);
+            uint16_t timeout = uwb_phy_frame_duration(smp_inst->dev_inst, 128) + 0x600;
+            uwb_set_rx_timeout(smp_inst->dev_inst, timeout);
+            uwb_start_rx(smp_inst->dev_inst);
         }
-        uint16_t cur_len = OS_MBUF_PKTLEN(nmgr_inst->rx_pkt);
-        os_mbuf_copyinto(nmgr_inst->rx_pkt, cur_len, &frame->array[sizeof(struct _nmgr_uwb_header)], nmgr_inst->dev_inst->frame_len - sizeof(struct _nmgr_uwb_header));
+        uint16_t cur_len = OS_MBUF_PKTLEN(smp_inst->rx_pkt);
+        os_mbuf_copyinto(smp_inst->rx_pkt, cur_len, &frame->array[sizeof(struct _smp_uwb_header)], smp_inst->dev_inst->frame_len - sizeof(struct _smp_uwb_header));
     }
     //Start decoding
-    if(nmgr_inst->repeat_mode == 0){
+    if(smp_inst->repeat_mode == 0){
 
-        cbor_mbuf_reader_init(&nmgr_inst->reader, nmgr_inst->rx_pkt, sizeof(struct nmgr_hdr));
-        cbor_parser_init(&nmgr_inst->reader.r, 0, &nmgr_inst->n_b.parser, &nmgr_inst->n_b.it);
+        cbor_mbuf_reader_init(&smp_inst->reader, smp_inst->rx_pkt, sizeof(struct smp_hdr));
+        cbor_parser_init(&smp_inst->reader.r, 0, &smp_inst->n_b.parser, &smp_inst->n_b.it);
 
         if(frame->hdr.nh_group == htons(MGMT_GROUP_ID_IMAGE)) {
-            if(nmgr_inst->cmd_id == IMGMGR_NMGR_ID_UPLOAD) {
+            if(smp_inst->cmd_id == IMGMGR_SMP_ID_UPLOAD) {
                 long long int rc = 0, off = 0;
                 char rsn[15] = "\0";
                 struct cbor_attr_t attrs[4] = {
@@ -668,16 +668,16 @@ rx_post_process(struct os_event* ev)
                         .attribute = NULL
                     }
                 };
-                rc = cbor_read_object(&nmgr_inst->n_b.it, attrs);
+                rc = cbor_read_object(&smp_inst->n_b.it, attrs);
                 if(rc != 0){
-                    nmgr_inst->err_status = (uint8_t)rc;
+                    smp_inst->err_status = (uint8_t)rc;
                 }else{
-                    nmgr_inst->err_status = 0;
-                    nmgr_inst->curr_off = off;
+                    smp_inst->err_status = 0;
+                    smp_inst->curr_off = off;
                 }
-                os_mbuf_free_chain(nmgr_inst->rx_pkt);
-                os_sem_release(&nmgr_inst->cmd_sem);
-            }else if(nmgr_inst->cmd_id == IMGMGR_NMGR_ID_STATE){
+                os_mbuf_free_chain(smp_inst->rx_pkt);
+                os_sem_release(&smp_inst->cmd_sem);
+            }else if(smp_inst->cmd_id == IMGMGR_SMP_ID_STATE){
                 struct h_obj {
                     char hash[IMGMGR_HASH_LEN];
                     char version[32];
@@ -763,13 +763,13 @@ rx_post_process(struct os_event* ev)
                         NULL,
                     },
                 };
-                int err = cbor_read_object(&nmgr_inst->n_b.it, arr);
+                int err = cbor_read_object(&smp_inst->n_b.it, arr);
                 if(rc != 0LL || err != 0){
-                    nmgr_inst->err_status = 1;
+                    smp_inst->err_status = 1;
                     printf("Wrong hash sent %lld %d\n", rc, err);
                     goto err;
                 }else
-                    nmgr_inst->err_status = 0;
+                    smp_inst->err_status = 0;
                 for(int i =0; i< count; i++){
                     printf("\nSlot = %lld \n", arr_objs[i].slot);
                     printf("Version = %s \n", arr_objs[i].version);
@@ -785,7 +785,7 @@ rx_post_process(struct os_event* ev)
                     printf("\n%s\n", hex_format(arr_objs[i].hash, IMGMGR_HASH_LEN, hash_str, sizeof(hash_str)));
                 }
             err:
-                os_mbuf_free_chain(nmgr_inst->rx_pkt);
+                os_mbuf_free_chain(smp_inst->rx_pkt);
             }
         } else if(frame->hdr.nh_group == htons(MGMT_GROUP_ID_CONFIG)) {
             long long int rc = 0;
@@ -818,8 +818,8 @@ rx_post_process(struct os_event* ev)
                     .attribute = NULL
                 }
             };
-            cbor_read_object(&nmgr_inst->n_b.it, attrs);
-            if (frame->hdr.nh_op == NMGR_OP_WRITE_RSP) {
+            cbor_read_object(&smp_inst->n_b.it, attrs);
+            if (frame->hdr.nh_op == SMP_OP_WRITE_RSP) {
                 console_printf("# Reply from 0x%04x: rc:%d, Write %s\n",
                                frame->src_address, (int)rc, (rc)?"ERR":"OK");
             } else {
@@ -827,16 +827,16 @@ rx_post_process(struct os_event* ev)
                                frame->src_address, (int)rc,
                                val_str);
             }
-            os_mbuf_free_chain(nmgr_inst->rx_pkt);
+            os_mbuf_free_chain(smp_inst->rx_pkt);
         } else {
-            printf("Unrecognized reply (cmd_id:%d) \n", nmgr_inst->cmd_id);
-            os_mbuf_free_chain(nmgr_inst->rx_pkt);
+            printf("Unrecognized reply (cmd_id:%d) \n", smp_inst->cmd_id);
+            os_mbuf_free_chain(smp_inst->rx_pkt);
         }
     }
 }
 
 struct os_eventq*
-nmgr_cmds_get_eventq()
+smp_cmds_get_eventq()
 {
-    return &nmgr_inst->nmgr_eventq;
+    return &smp_inst->smp_eventq;
 }

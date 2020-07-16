@@ -23,7 +23,7 @@ pkg.author: "UWB Core <uwbcore@gmail.com>"
 pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
     - uwb
-    - nmgr
+    - smp
 
 pkg.cflags:
     - "-std=gnu99"

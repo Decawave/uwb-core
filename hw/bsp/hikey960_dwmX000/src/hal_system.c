@@ -138,8 +138,8 @@ void __attribute__((weak)) log_init(void) { /* Dummy */ }
 void __attribute__((weak)) mfg_init(void) { /* Dummy */ }
 void __attribute__((weak)) modlog_init(void) { /* Dummy */ }
 void __attribute__((weak)) uwb_pan_pkg_init(void) { /* Dummy */ }
-void __attribute__((weak)) nmgr_pkg_init(void) { /* Dummy */ }
-void __attribute__((weak)) nmgr_uwb_pkg_init(void) { /* Dummy */ }
+void __attribute__((weak)) smp_pkg_init(void) { /* Dummy */ }
+void __attribute__((weak)) smp_uwb_pkg_init(void) { /* Dummy */ }
 void __attribute__((weak)) twr_ss_nrng_pkg_init(void) { /* Dummy */ }
 void __attribute__((weak)) nrng_pkg_init(void) { /* Dummy */ }
 void __attribute__((weak)) survey_pkg_init(void) { /* Dummy */ }

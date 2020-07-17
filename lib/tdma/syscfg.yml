@@ -17,6 +17,9 @@ syscfg.defs:
     TDMA_MAX_SLOT_DELAY_US:
         description: 'Drop slots if they will start later than this many us late'
         value: 500
+    TDMA_DROPPED_SLOT_DEBUG:
+        description: 'Print a debug json sentance using the main task whenever dropping a slot'
+        value: 0
     TDMA_TASK_STACK_SZ:
         description: 'Size of tdma task stack'
         value: 256

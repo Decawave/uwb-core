@@ -231,6 +231,24 @@ tdma_tasks_init(struct _tdma_instance_t * inst)
 #endif
 }
 
+#if MYNEWT_VAL(TDMA_DROPPED_SLOT_DEBUG)
+struct drop_s {
+    int idx;
+    uint32_t delay;
+    uint32_t ticks;
+    uint32_t slot_start;
+};
+
+void
+dropped_slot_cb(struct dpl_event * ev)
+{
+    assert(ev);
+    struct drop_s * d = (struct drop_s *) dpl_event_get_arg(ev);
+    printf("{\"tdma_dropped_idx\": %d, \"delay\": %ld, \"ticks\":%lu, \"start\": %lu}\n",
+           d->idx, d->delay, d->ticks, d->slot_start);
+}
+#endif
+
 /**
  * @fn tdma_task(void *arg)
  * @brief API for task function of tdma.
@@ -249,6 +267,12 @@ tdma_task(void *arg)
     struct dpl_event *ev;
     tdma_instance_t * tdma = arg;
 
+#if MYNEWT_VAL(TDMA_DROPPED_SLOT_DEBUG)
+    struct dpl_event dropped_ev;
+    struct drop_s dropped_slot = {0};
+    dpl_event_init(&dropped_ev, dropped_slot_cb, (void *)&dropped_slot);
+#endif
+
     while (1) {
         ev = dpl_eventq_get(&tdma->eventq);
 #if MYNEWT_VAL(TDMA_MAX_SLOT_DELAY_US) == 0
@@ -263,12 +287,29 @@ tdma_task(void *arg)
 #endif
         /* Assume all other events are tdma_slots */
         slot = (tdma_slot_t *) dpl_event_get_arg(ev);
+
+        /* Check if we've come in to service the slot late */
         ticks = dpl_cputime_get32();
-        delay = dpl_cputime_ticks_to_usecs(ticks - slot->cputime_slot_start);
+        ticks -= slot->cputime_slot_start;
+        if (ticks & 0x10000000) {
+            /* We're early (ticks < slot_start) */
+            delay = 0;
+        } else {
+            delay = dpl_cputime_ticks_to_usecs(ticks);
+        }
 
         /* Ignore slots if we're too late in to run them */
         if (slot->idx!=0 && delay > MYNEWT_VAL(TDMA_MAX_SLOT_DELAY_US)) {
             TDMA_STATS_INC(dropped_slots);
+#if MYNEWT_VAL(TDMA_DROPPED_SLOT_DEBUG)
+            if (!dpl_event_is_queued(&dropped_ev)) {
+                dropped_slot.idx = slot->idx;
+                dropped_slot.delay = delay;
+                dropped_slot.ticks = ticks;
+                dropped_slot.slot_start = slot->cputime_slot_start;
+                dpl_eventq_put(dpl_eventq_dflt_get(), &dropped_ev);
+            }
+#endif
         } else{
             dpl_event_run(ev);
         }

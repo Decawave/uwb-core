@@ -165,6 +165,7 @@ int
 uwbcfg_internal_set(int idx, char* val)
 {
     if (idx < CFGSTR_MAX && strlen(val) < sizeof(g_uwb_config[0])) {
+        memset(g_uwb_config[idx], 0, CFGSTR_MAX);
         memcpy(g_uwb_config[idx], val, strlen(val));
         return 0;
     }

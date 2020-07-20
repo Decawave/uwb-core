@@ -122,19 +122,29 @@ wcs_timescale_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
     uwb_ccp_frame_t * frame = ccp->frames[(ccp->idx)%ccp->nframes];
     wcs->carrier_integrator = frame->carrier_integrator;
     wcs->observed_interval = (ccp->local_epoch - wcs->local_epoch.lo) & 0x0FFFFFFFFFFUL; // Observed ccp interval
-    wcs->master_epoch.timestamp = ccp->master_epoch.timestamp;
-    wcs->local_epoch.timestamp += wcs->observed_interval;
+    /* Don't directly update master and local_epoch here. Instead delay
+     * that update so it's updated at the same time as states to stay
+     * consistent. */
+    wcs->new_master_epoch.timestamp = ccp->master_epoch.timestamp;
+    wcs->new_local_epoch.timestamp = wcs->local_epoch.timestamp + wcs->observed_interval;
 
-    if(ccp->status.valid){
-        if (wcs->config.postprocess == true)
+    /* Explicitly reset wcs if the ccp status valid count goes to zero */
+    if (!ccp->status.valid_count) {
+        wcs->status.initialized = 0;
+        wcs->master_epoch.timestamp = wcs->new_master_epoch.timestamp;
+        wcs->local_epoch.timestamp = wcs->new_local_epoch.timestamp;
+    }
+
+    if (ccp->status.valid) {
+        if (wcs->config.postprocess == true) {
             dpl_eventq_put(dpl_eventq_dflt_get(), &wcs->postprocess_ev);
-    }else{
+        }
+    } else {
         wcs->normalized_skew = (dpl_float64_t) 1.0l;
         wcs->fractional_skew = (dpl_float64_t) 0.0l;
-        wcs->status.initialized = 0;
+        wcs->status.valid = wcs->status.initialized = 0;
     }
     return true;
-
 }
 
 
@@ -153,6 +163,7 @@ wcs_timescale_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 void
 wcs_timescale_ev(struct dpl_event * ev)
 {
+    os_sr_t sr;
     assert(ev != NULL);
     assert(dpl_event_get_arg(ev) != NULL);
 
@@ -161,43 +172,48 @@ wcs_timescale_ev(struct dpl_event * ev)
     uwb_wcs_states_t * states = (uwb_wcs_states_t *) wcs->states.array;
     timescale_instance_t * timescale = wcs->timescale;
 
-    if(ccp->status.valid){
-        double q[] = { MYNEWT_VAL(TIMESCALE_QVAR) * 1.0l, MYNEWT_VAL(TIMESCALE_QVAR) * 0.1l, MYNEWT_VAL(TIMESCALE_QVAR) * 0.01l};
+    double q[] = { MYNEWT_VAL(TIMESCALE_QVAR) * 1.0l, MYNEWT_VAL(TIMESCALE_QVAR) * 0.1l, MYNEWT_VAL(TIMESCALE_QVAR) * 0.01l};
 
-        if (wcs->status.initialized == 0){
-            states->time = (double) wcs->master_epoch.lo;
-            states->skew = (1.0l + (double ) uwb_calc_clock_offset_ratio(
-                                ccp->dev_inst, wcs->carrier_integrator,
-                                UWB_CR_CARRIER_INTEGRATOR)) * MYNEWT_VAL(UWB_WCS_DTU) ;
-            states->drift = 0;
-            double x0[] = {states->time, states->skew, states->drift};
-            double T = 1e-6l * MYNEWT_VAL(UWB_CCP_PERIOD);
-            timescale = timescale_init(timescale, x0, q, T);
-            ((timescale_states_t * )timescale->eke->x)->time = states->time;
-            ((timescale_states_t * )timescale->eke->x)->skew = states->skew;
-            ((timescale_states_t * )timescale->eke->x)->drift =states->drift;
-            wcs->status.valid = wcs->status.initialized = 1;
-        }else{
-            double z[] ={(double) wcs->master_epoch.lo,
-                        (1.0l + (double ) uwb_calc_clock_offset_ratio(
-                               ccp->dev_inst, wcs->carrier_integrator,
-                               UWB_CR_CARRIER_INTEGRATOR)) * MYNEWT_VAL(UWB_WCS_DTU)
-            };
-            double T = wcs->observed_interval / MYNEWT_VAL(UWB_WCS_DTU) ; // observed interval in seconds, master reference
-            double r[] = {MYNEWT_VAL(TIMESCALE_RVAR), MYNEWT_VAL(UWB_WCS_DTU) * 1e20};
-            wcs->status.valid = timescale_main(timescale, z, q, r, T).valid;
-        }
+    if (wcs->status.initialized == 0) {
+        states->time = (double) wcs->new_master_epoch.lo;
+        states->skew = (1.0l + (double ) uwb_calc_clock_offset_ratio(
+                            ccp->dev_inst, wcs->carrier_integrator,
+                            UWB_CR_CARRIER_INTEGRATOR)) * MYNEWT_VAL(UWB_WCS_DTU) ;
+        states->drift = 0;
+        double x0[] = {states->time, states->skew, states->drift};
+        double T = 1e-6l * MYNEWT_VAL(UWB_CCP_PERIOD);
+        timescale = timescale_init(timescale, x0, q, T);
+        ((timescale_states_t * )timescale->eke->x)->time = states->time;
+        ((timescale_states_t * )timescale->eke->x)->skew = states->skew;
+        ((timescale_states_t * )timescale->eke->x)->drift =states->drift;
+        wcs->status.valid = wcs->status.initialized = 1;
+    } else {
+        double z[] ={(double) wcs->new_master_epoch.lo,
+                     (1.0l + (double ) uwb_calc_clock_offset_ratio(
+                         ccp->dev_inst, wcs->carrier_integrator,
+                         UWB_CR_CARRIER_INTEGRATOR)) * MYNEWT_VAL(UWB_WCS_DTU)
+        };
+        double T = wcs->observed_interval / MYNEWT_VAL(UWB_WCS_DTU) ; // observed interval in seconds, master reference
+        double r[] = {MYNEWT_VAL(TIMESCALE_RVAR), MYNEWT_VAL(UWB_WCS_DTU) * 1e20};
+        wcs->status.valid = timescale_main(timescale, z, q, r, T).valid;
+    }
 
-        if (wcs->status.valid){
-            states->time = ((timescale_states_t * )timescale->eke->x)->time;
-            states->skew = ((timescale_states_t * )timescale->eke->x)->skew;
-            states->drift = ((timescale_states_t * )timescale->eke->x)->drift;
-            wcs->normalized_skew = states->skew / MYNEWT_VAL(UWB_WCS_DTU);
-            wcs->fractional_skew = (dpl_float64_t) 1.0l - wcs->normalized_skew;
-        }else{
-            wcs->normalized_skew = (dpl_float64_t) 1.0l;
-            wcs->fractional_skew = (dpl_float64_t) 0.0l;
-        }
+    /* Todo: enclose the update of states and local_epoch in critial_section? */
+    OS_ENTER_CRITICAL(sr);
+    if (wcs->status.valid) {
+        states->time = ((timescale_states_t * )timescale->eke->x)->time;
+        states->skew = ((timescale_states_t * )timescale->eke->x)->skew;
+        states->drift = ((timescale_states_t * )timescale->eke->x)->drift;
+        wcs->normalized_skew = states->skew / MYNEWT_VAL(UWB_WCS_DTU);
+        wcs->fractional_skew = (dpl_float64_t) 1.0l - wcs->normalized_skew;
+    } else {
+        wcs->normalized_skew = (dpl_float64_t) 1.0l;
+        wcs->fractional_skew = (dpl_float64_t) 0.0l;
+    }
+    wcs->master_epoch.timestamp = wcs->new_master_epoch.timestamp;
+    wcs->local_epoch.timestamp = wcs->new_local_epoch.timestamp;
+    OS_EXIT_CRITICAL(sr);
+
 #if MYNEWT_VAL(UWB_WCS_VERBOSE)
     wcs_json_t json = {
         .utime = ccp->master_epoch.timestamp,
@@ -206,7 +222,6 @@ wcs_timescale_ev(struct dpl_event * ev)
     };
     wcs_json_write_uint64(&json);
 #endif
-    }
 }
 
 

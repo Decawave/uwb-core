@@ -407,8 +407,8 @@ uwb_wcs_prediction(dpl_float64_t * x, dpl_float64_t T)
     // x = A * x;
     dpl_float64_t A[] = { DPL_FLOAT64_INIT(1.0l), T, DPL_FLOAT64_DIV(DPL_FLOAT64_MUL(T,T),DPL_FLOAT64_INIT(2.0l))};
     dpl_float64_t tmp = DPL_FLOAT64_INIT(0.0l);
-    for (uint8_t i=0 ; i < sizeof(A)/sizeof(dpl_float64_t); i++ ){
-            tmp = DPL_FLOAT64_ADD(tmp,DPL_FLOAT64_MUL(A[i],x[i]));
+    for (uint8_t i=0 ; i < ARRAY_SIZE(A); i++) {
+        tmp = DPL_FLOAT64_ADD(tmp, DPL_FLOAT64_MUL(A[i],x[i]));
     }
     return tmp;
 }

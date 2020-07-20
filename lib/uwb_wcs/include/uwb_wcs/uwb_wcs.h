@@ -61,7 +61,9 @@ struct uwb_wcs_instance {
     struct uwb_wcs_control control;
     struct uwb_wcs_config config;
     uint64_t observed_interval;
+    uwb_ccp_timestamp_t new_master_epoch;           //!< New observed master epoch
     uwb_ccp_timestamp_t master_epoch;
+    uwb_ccp_timestamp_t new_local_epoch;            //!< New observed local epoch
     uwb_ccp_timestamp_t local_epoch;
     uwb_wcs_states_t states;
     int32_t carrier_integrator;                     //!< Receiver carrier_integrator

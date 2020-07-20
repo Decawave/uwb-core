@@ -126,7 +126,7 @@ static STATS_SECT_DECL(pan_stat_section) g_stat; //!< Stats instance
 
 static uwb_pan_config_t g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(UWB_PAN_TX_HOLDOFF),         // Send Time delay in usec.
-    .rx_timeout_period = MYNEWT_VAL(UWB_PAN_RX_TIMEOUT),        // Receive response timeout in usec.
+    .rx_timeout_period = MYNEWT_VAL(UWB_PAN_RX_TIMEOUT),        // Receive response timeout in usec (in addition to frame duration).
     .lease_time = MYNEWT_VAL(UWB_PAN_LEASE_TIME),               // Lease time in seconds
     .network_role = MYNEWT_VAL(UWB_PAN_NETWORK_ROLE)            // Role in the network (Anchor/Tag/...)
 };
@@ -234,7 +234,9 @@ uwb_pan_pkg_init(void)
 {
     struct uwb_dev *udev;
     struct uwb_pan_instance *pan;
+#if MYNEWT_VAL(UWB_PKG_INIT_LOG)
     printf("{\"utime\": %lu,\"msg\": \"pan_pkg_init\"}\n", dpl_cputime_ticks_to_usecs(dpl_cputime_get32()));
+#endif
 
     dpl_error_t rc = stats_init(
         STATS_HDR(g_stat),
@@ -394,8 +396,10 @@ lease_expiry_cb(struct dpl_event * ev)
 
 
 static void
-handle_pan_request(struct uwb_pan_instance * pan, pan_frame_t * request)
+handle_pan_request(struct uwb_pan_instance * pan, pan_frame_t * request, uint64_t rx_timestamp)
 {
+    uint64_t dx_time;
+    uint32_t frame_duration;
     if (!pan->request_cb) {
         return;
     }
@@ -403,11 +407,21 @@ handle_pan_request(struct uwb_pan_instance * pan, pan_frame_t * request)
     pan_frame_t * response = pan->frames[(pan->idx)%pan->nframes];
     response->code = DWT_PAN_RESP;
 
-    if (pan->request_cb(request->long_address, &request->req, &response->req)) {
-        uwb_set_wait4resp(pan->dev_inst, false);
-        uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
-        uwb_write_tx(pan->dev_inst, response->array, 0, sizeof(struct _pan_frame_t));
-        pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error;
+    if (!pan->request_cb(request->long_address, &request->req, &response->req)) {
+        return;
+    }
+
+    frame_duration = uwb_phy_frame_duration(pan->dev_inst, sizeof(sizeof(struct _pan_frame_t)));
+
+    /* Only transmit response after all repeats have finished */
+    dx_time = rx_timestamp;
+    dx_time += ((request->rpt_max - request->rpt_count + 1) * (pan->config->tx_holdoff_delay + frame_duration)) << 16;
+    uwb_set_delay_start(pan->dev_inst, dx_time);
+    uwb_set_wait4resp(pan->dev_inst, false);
+    uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
+    uwb_write_tx(pan->dev_inst, response->array, 0, sizeof(struct _pan_frame_t));
+    if ((pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error)) {
+        STATS_INC(g_stat, tx_error);
     }
 }
 
@@ -426,6 +440,7 @@ handle_pan_request(struct uwb_pan_instance * pan, pan_frame_t * request)
 static bool
 rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
+    uint32_t frame_duration;
     struct uwb_pan_instance * pan = (struct uwb_pan_instance *)cbs->inst_ptr;
     if(inst->fctrl_array[0] != FCNTL_IEEE_BLINK_TAG_64) {
         if (dpl_sem_get_count(&pan->sem) == 0) {
@@ -455,11 +470,18 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         frame->rpt_count < frame->rpt_max &&
         frame->long_address != inst->my_long_address) {
         frame->rpt_count++;
+
+        frame_duration = uwb_phy_frame_duration(pan->dev_inst, sizeof(sizeof(struct _pan_frame_t)));
+        uwb_set_delay_start(pan->dev_inst, inst->rxtimestamp +
+                            ((pan->config->tx_holdoff_delay + frame_duration) << 16));
         uwb_set_wait4resp(inst, true);
         uwb_write_tx_fctrl(inst, inst->frame_len, 0);
-        pan->status.start_tx_error = uwb_start_tx(inst).start_tx_error;
         uwb_write_tx(inst, frame->array, 0, inst->frame_len);
-        STATS_INC(g_stat, relay_tx);
+        if ((pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error)) {
+            STATS_INC(g_stat, tx_error);
+        } else {
+            STATS_INC(g_stat, relay_tx);
+        }
     }
 
     switch(frame->code) {
@@ -468,7 +490,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         if (pan->config->role == UWB_PAN_ROLE_MASTER) {
             /* Prevent another request coming in whilst processing this one */
             uwb_stop_rx(inst);
-            handle_pan_request(pan, frame);
+            handle_pan_request(pan, frame, inst->rxtimestamp);
         } else {
             return true;
         }
@@ -632,14 +654,15 @@ uwb_pan_listen(struct uwb_pan_instance * pan, uwb_dev_modes_t mode)
  * @param inst     Pointer to struct uwb_dev.
  * @param role     Requested role in the network
  * @param mode     BLOCKING and NONBLOCKING modes of uwb_dev_modes_t.
- * @param delay    When to send this blink
+ * @param dx_time  When to send this blink
  *
  * @return uwb_pan_status_t
  */
 uwb_pan_status_t
 uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
-                 uwb_dev_modes_t mode, uint64_t delay)
+              uwb_dev_modes_t mode, uint64_t dx_time)
 {
+    uint32_t rx_delay, rx_timeout, frame_duration, shr_duration;
     dpl_error_t err = dpl_sem_pend(&pan->sem,  DPL_TIMEOUT_NEVER);
     assert(err == DPL_OK);
 
@@ -663,11 +686,21 @@ uwb_pan_blink(struct uwb_pan_instance *pan, uint16_t role,
     frame->req.fw_ver.iv_build_num = iv.iv_build_num;
 #endif
 
-    uwb_set_delay_start(pan->dev_inst, delay);
+    uwb_set_delay_start(pan->dev_inst, dx_time);
     uwb_write_tx_fctrl(pan->dev_inst, sizeof(struct _pan_frame_t), 0);
     uwb_write_tx(pan->dev_inst, frame->array, 0, sizeof(struct _pan_frame_t));
+
+    /* Don't start listening before the repeats are done */
+    /* REQ(pmbl+data) | Holdoff | RPT(pmbl+data) | ... | Holdoff | RESP(pmbl+data) */
+    frame_duration = uwb_phy_frame_duration(pan->dev_inst, sizeof(sizeof(struct _pan_frame_t)));
+    shr_duration = uwb_phy_SHR_duration(pan->dev_inst);
+    rx_delay = (frame->rpt_max+1)*(pan->config->tx_holdoff_delay + frame_duration) - shr_duration;
     uwb_set_wait4resp(pan->dev_inst, true);
-    uwb_set_rx_timeout(pan->dev_inst, pan->config->rx_timeout_period);
+    uwb_set_wait4resp_delay(pan->dev_inst, rx_delay);
+
+    rx_timeout = frame->rpt_max*(pan->config->tx_holdoff_delay + frame_duration) + pan->config->rx_timeout_period;
+    uwb_set_rx_window(pan->dev_inst, dx_time + (rx_delay << 16),
+                      dx_time + ((rx_delay + rx_timeout) << 16));
     pan->status.start_tx_error = uwb_start_tx(pan->dev_inst).start_tx_error;
 
     if (pan->status.start_tx_error){
@@ -779,6 +812,7 @@ uwb_pan_lease_remaining(struct uwb_pan_instance * pan)
 void
 uwb_pan_slot_timer_cb(struct dpl_event * ev)
 {
+    uint64_t timeout, dx_time;
     assert(ev);
     tdma_slot_t * slot = (tdma_slot_t *) dpl_event_get_arg(ev);
 
@@ -797,17 +831,17 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
             _pan_cycles++;
             uwb_pan_reset(pan, tdma_tx_slot_start(tdma, idx));
         } else {
-            uint64_t dx_time = tdma_rx_slot_start(tdma, idx);
-            uwb_set_rx_timeout(tdma->dev_inst, 3*ccp->period/tdma->nslots/4);
-            uwb_set_delay_start(tdma->dev_inst, dx_time);
+            dx_time = tdma_rx_slot_start(tdma, idx);
+            timeout = 3*ccp->period/tdma->nslots/4;
+            uwb_set_rx_window(tdma->dev_inst, dx_time, dx_time + (timeout << 16));
             uwb_set_on_error_continue(tdma->dev_inst, true);
             uwb_pan_listen(pan, UWB_BLOCKING);
         }
     } else {
         /* Act as a slave Node in the network */
-        if (pan->status.valid && uwb_pan_lease_remaining(pan)>MYNEWT_VAL(UWB_PAN_LEASE_EXP_MARGIN)) {
+        if (pan->status.valid && uwb_pan_lease_remaining(pan) > MYNEWT_VAL(UWB_PAN_LEASE_EXP_MARGIN)) {
             /* Our lease is still valid - just listen */
-            uint16_t timeout;
+            dx_time = tdma_rx_slot_start(tdma, idx);
             if (pan->config->role == UWB_PAN_ROLE_RELAY) {
                 timeout = 3*ccp->period/tdma->nslots/4;
             } else {
@@ -815,15 +849,14 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
                 timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)))
                     + MYNEWT_VAL(XTALT_GUARD);
             }
-            uwb_set_rx_timeout(tdma->dev_inst, timeout);
-            uwb_set_delay_start(tdma->dev_inst, tdma_rx_slot_start(tdma, idx));
+            uwb_set_rx_window(tdma->dev_inst, dx_time, dx_time + (timeout << 16));
             uwb_set_on_error_continue(tdma->dev_inst, true);
             if (uwb_pan_listen(pan, UWB_BLOCKING).start_rx_error) {
                 STATS_INC(g_stat, rx_error);
             }
         } else {
             /* Subslot 0 is for master reset, subslot 1 is for sending requests */
-            uint64_t dx_time = tdma_tx_slot_start(tdma, (float)idx+1.0f/16);
+            dx_time = tdma_tx_slot_start(tdma, (float)idx+1.0f/16);
             uwb_pan_blink(pan, pan->config->network_role, UWB_BLOCKING, dx_time);
         }
     }

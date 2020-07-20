@@ -7,10 +7,10 @@ syscfg.defs:
         value: 0
     UWB_PAN_TX_HOLDOFF:
         description: 'tx holdoff delay for PAN (usec)'
-        value: ((uint32_t)0x0300)
+        value: ((uint32_t)0x0200)
     UWB_PAN_RX_TIMEOUT:
         description: 'TOA timeout delay for PAN (usec)'
-        value: ((uint16_t)0x0600)
+        value: ((uint16_t)0x0100)
     UWB_PAN_LEASE_TIME:
         description: 'PAN address requested lease time (s)'
         value: ((uint16_t)300)

@@ -838,16 +838,21 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
             uwb_pan_listen(pan, UWB_BLOCKING);
         }
     } else {
+        uint32_t lease_remaining_ms = uwb_pan_lease_remaining(pan);
+        uint32_t frame_duration = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)));
+        /* For one repeat: FH RH FH R, for two repeats: FH RH RH FH RH R,
+         * where F is frame, R repeat, and H is holdoff */
+        uint32_t f_and_rpt_duration = 2*(MYNEWT_VAL(UWB_PAN_RPT_MAX) + 1)*(frame_duration + pan->config->tx_holdoff_delay);
+        dx_time = tdma_rx_slot_start(tdma, idx);
+
         /* Act as a slave Node in the network */
-        if (pan->status.valid && uwb_pan_lease_remaining(pan) > MYNEWT_VAL(UWB_PAN_LEASE_EXP_MARGIN)) {
+        if (pan->status.valid && lease_remaining_ms > MYNEWT_VAL(UWB_PAN_LEASE_EXP_MARGIN)) {
             /* Our lease is still valid - just listen */
-            dx_time = tdma_rx_slot_start(tdma, idx);
             if (pan->config->role == UWB_PAN_ROLE_RELAY) {
                 timeout = 3*ccp->period/tdma->nslots/4;
             } else {
                 /* Only listen long enough to get any resets from master */
-                timeout = uwb_phy_frame_duration(tdma->dev_inst, sizeof(sizeof(struct _pan_frame_t)))
-                    + MYNEWT_VAL(XTALT_GUARD);
+                timeout = f_and_rpt_duration;
             }
             uwb_set_rx_window(tdma->dev_inst, dx_time, dx_time + (timeout << 16));
             uwb_set_on_error_continue(tdma->dev_inst, true);
@@ -856,8 +861,19 @@ uwb_pan_slot_timer_cb(struct dpl_event * ev)
             }
         } else {
             /* Subslot 0 is for master reset, subslot 1 is for sending requests */
-            dx_time = tdma_tx_slot_start(tdma, (float)idx+1.0f/16);
+            dx_time += f_and_rpt_duration;
+
+#if MYNEWT_VAL(PAN_PRIORITY_REQUEST_TH)
+            if (lease_remaining_ms*1024 > MYNEWT_VAL(PAN_PRIORITY_REQUEST_TH)*ccp->period) {
+                dx_time += f_and_rpt_duration;
+            }
+#endif
             uwb_pan_blink(pan, pan->config->network_role, UWB_BLOCKING, dx_time);
+#if MYNEWT_VAL(UWB_PAN_VERBOSE)
+            printf("{\"blink_delay\": %ld, \"rem0\": %ld, \"rem1\": %ld}\n",
+                   f_and_rpt_duration + (lease_remaining_ms > 8*ccp->period/1000)*f_and_rpt_duration,
+                   lease_remaining_ms, uwb_pan_lease_remaining(pan));
+#endif
         }
     }
 }

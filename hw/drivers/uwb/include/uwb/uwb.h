@@ -92,40 +92,42 @@ struct uwb_dev_capabilities {
 
 //! Structure of UWB device status.
 struct uwb_dev_status {
-    uint32_t selfmalloc:1;            //!< Internal flag for memory garbage collection
-    uint32_t initialized:1;           //!< Instance allocated
-    uint32_t start_tx_error:1;        //!< Start transmit error
-    uint32_t start_rx_error:1;        //!< Start receive error
-    uint32_t tx_frame_error:1;        //!< Transmit frame error
-    uint32_t txbuf_error:1;           //!< Tx buffer error
-    uint32_t rx_error:1;              //!< Receive error
-    uint32_t rx_timeout_error:1;      //!< Receive timeout error
+    uint64_t selfmalloc:1;            //!< Internal flag for memory garbage collection
+    uint64_t initialized:1;           //!< Instance allocated
+    uint64_t start_tx_error:1;        //!< Start transmit error
+    uint64_t start_rx_error:1;        //!< Start receive error
+    uint64_t tx_frame_error:1;        //!< Transmit frame error
+    uint64_t txbuf_error:1;           //!< Tx buffer error
+    uint64_t rx_error:1;              //!< Receive error
+    uint64_t rx_timeout_error:1;      //!< Receive timeout error
 
-    uint32_t rx_autoframefilt_rej:1;  //!< Automatic Frame Filter rejection
-    uint32_t rx_prej:1;               //!< Rx preamble rejection
-    uint32_t lde_error:1;             //!< Error in Leading Edge Detection
-    uint32_t spi_error:1;             //!< SPI error
-    uint32_t LDE_enabled:1;           //!< Load LDE microcode on wake up
-    uint32_t LDO_enabled:1;           //!< Load the LDO tune value on wake up
-    uint32_t autoack_triggered:1;     //!< Autoack event triggered
-    uint32_t sleep_enabled:1;         //!< Indicates sleep_enabled bit is set
+    uint64_t rx_autoframefilt_rej:1;  //!< Automatic Frame Filter rejection
+    uint64_t rx_prej:1;               //!< Rx preamble rejection
+    uint64_t lde_error:1;             //!< Error in Leading Edge Detection
+    uint64_t spi_error:1;             //!< SPI error
+    uint64_t LDE_enabled:1;           //!< Load LDE microcode on wake up
+    uint64_t LDO_enabled:1;           //!< Load the LDO tune value on wake up
+    uint64_t autoack_triggered:1;     //!< Autoack event triggered
+    uint64_t sleep_enabled:1;         //!< Indicates sleep_enabled bit is set
 
-    uint32_t sleeping:1;              //!< Indicates sleeping state
-    uint32_t sem_force_released:1;    //!< Semaphore was released in forcetrxoff
-    uint32_t overrun_error:1;         //!< Dblbuffer overrun detected
-    uint32_t rx_restarted:1;          //!< RX restarted since last received packet
-    uint32_t ext_sync:1;              //!< External sync successful
-    uint32_t spi_r_error:1;           //!< SPI CRC failed on read
-    uint32_t spi_w_error:1;           //!< SPI CRC failed on read
-    uint32_t spi_fifo_error:1;        //!< SPI FIFO overflow or underflow
+    uint64_t sleeping:1;              //!< Indicates sleeping state
+    uint64_t sem_force_released:1;    //!< Semaphore was released in forcetrxoff
+    uint64_t overrun_error:1;         //!< Dblbuffer overrun detected
+    uint64_t rx_restarted:1;          //!< RX restarted since last received packet
+    uint64_t ext_sync:1;              //!< External sync successful
+    uint64_t spi_r_error:1;           //!< SPI CRC failed on read
+    uint64_t spi_w_error:1;           //!< SPI CRC failed on read
+    uint64_t spi_fifo_error:1;        //!< SPI FIFO overflow or underflow
 
-    uint32_t cmd_error:1;             //!< Fast CMD error, cmd was ignored
-    uint32_t aes_error:1;             //!< AES-DMA error, AES auth err, or DMA conflict
-    uint32_t sem_error:1;             //!< Semaphore error
-    uint32_t mtx_error:1;             //!< Mutex error
-    uint32_t sts_pream_error:1;       //!< STS Preamble error
-    uint32_t sts_ts_error:1;          //!< STS Timestamp doesn't match Ipatov Timestamp
-    uint32_t dblbuff_current:2;       //!< Current access dblbuffer (0=off, 1=A, 2=B)
+    uint64_t pll_ll_error:1;          //!< Clock PLL Losing Lock error
+    uint64_t cmd_error:1;             //!< Fast CMD error, cmd was ignored
+    uint64_t aes_error:1;             //!< AES-DMA error, AES auth err, or DMA conflict
+    uint64_t sem_error:1;             //!< Semaphore error
+    uint64_t mtx_error:1;             //!< Mutex error
+    uint64_t sts_pream_error:1;       //!< STS Preamble error
+    uint64_t sts_ts_error:1;          //!< STS Timestamp doesn't match Ipatov Timestamp
+
+    uint64_t dblbuff_current:2;       //!< Current access dblbuffer (0=off, 1=A, 2=B)
 };
 
 //! Clock recovery calculation types

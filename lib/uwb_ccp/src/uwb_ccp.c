@@ -844,6 +844,13 @@ static bool
 error_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
 {
     struct uwb_ccp_instance * ccp = (struct uwb_ccp_instance *)cbs->inst_ptr;
+
+    /* A pll error means we need to start over with aquiring ccp lock */
+    if (inst->status.pll_ll_error) {
+        uwb_ccp_stop(ccp);
+        uwb_ccp_start(ccp, ccp->config.role);
+    }
+
     if(dpl_sem_get_count(&ccp->sem) == 1)
         return false;
 

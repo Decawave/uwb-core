@@ -656,11 +656,11 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
         ccp->master_euid = frame->euid;
         ccp->status.valid = (MYNEWT_VAL(UWB_CCP_VALID_THRESHOLD)==0);
         ccp->status.valid_count = 0;
-    }else{
-        if(ccp->status.valid_count < MYNEWT_VAL(UWB_CCP_VALID_THRESHOLD)-1){
+    } else {
+        if(ccp->status.valid_count < MYNEWT_VAL(UWB_CCP_VALID_THRESHOLD)){
             ccp->status.valid_count++;
         }
-        ccp->status.valid |= (ccp->status.valid_count == MYNEWT_VAL(UWB_CCP_VALID_THRESHOLD)-1);
+        ccp->status.valid |= (ccp->status.valid_count >= MYNEWT_VAL(UWB_CCP_VALID_THRESHOLD)-1);
     }
 
     ccp->master_epoch.timestamp = frame->transmission_timestamp.timestamp;

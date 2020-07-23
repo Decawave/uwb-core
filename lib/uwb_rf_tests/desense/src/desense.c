@@ -812,13 +812,12 @@ desense_txon(struct uwb_desense_instance * desense, uint16_t length, uint32_t de
 
     /* Prepare data to send */
     for (i=0;i<length;i+=sizeof(buf)) {
+        /* Any random set of bytes would be ok here */
+        memcpy(buf, (uint8_t[8]){0xde,0xca,0xaa,0x55,0xaa,0x55,0xaa,0x55}, 8);
         if (i==0) {
             /* Make sure fctrl bytes are invalid (0x00 00) */
             buf[0] = 0;
             buf[1] = 0;
-        } else {
-            /* Any random set of bytes would be ok here */
-            memcpy(buf, (uint8_t[8]){0xde,0xca,0xaa,0x55,0xaa,0x55,0xaa,0x55}, 8);
         }
         uwb_write_tx(desense->dev_inst, buf, offs, sizeof(buf));
         offs += sizeof(buf);

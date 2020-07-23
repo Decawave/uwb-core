@@ -26,8 +26,14 @@
 #include <uwb/uwb.h>
 #include <uwbcfg/uwbcfg.h>
 #include "uwbcfg_priv.h"
+
 #if MYNEWT_VAL(DW3000_DEVICE_0)
+#if MYNEWT_VAL(DW3000_DEVICE_REVISION) == 2
 #include <dw3000-c0/dw3000_hal.h>
+#endif
+#if MYNEWT_VAL(DW3000_DEVICE_REVISION) == 3
+#include <dw3000-d0/dw3000_hal.h>
+#endif
 #endif
 
 int

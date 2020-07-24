@@ -28,20 +28,20 @@ struct dpl_mempool;
 struct dpl_mbuf_pool;
 struct dpl_mempool_ext;
 
-int mem_malloc_mempool(struct dpl_mempool *mempool, uint16_t num_blocks,
+int dpl_mem_malloc_mempool(struct dpl_mempool *mempool, uint16_t num_blocks,
                        uint32_t block_size, char *name, void **out_buf);
-int mem_malloc_mempool_ext(struct dpl_mempool_ext *mempool, uint16_t num_blocks,
+int dpl_mem_malloc_mempool_ext(struct dpl_mempool_ext *mempool, uint16_t num_blocks,
                            uint32_t block_size, char *name, void **out_buf);
 
-int mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
+int dpl_mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
                          struct dpl_mbuf_pool *mbuf_pool, uint16_t num_blocks,
                          uint32_t block_size, char *name,
                          void **out_buf);
-int mem_malloc_mbufpkt_pool(struct dpl_mempool *mempool,
+int dpl_mem_malloc_mbufpkt_pool(struct dpl_mempool *mempool,
                             struct dpl_mbuf_pool *mbuf_pool, int num_blocks,
                             int block_size, char *name,
                             void **out_buf);
-int mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
+int dpl_mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
                        struct dpl_mbuf_pool *mbuf_pool, int num_blocks,
                        int block_size, char *name);
 
@@ -59,7 +59,7 @@ int mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
  */
 typedef struct dpl_mbuf *mem_frag_alloc_fn(uint16_t frag_size, void *arg);
 
-struct dpl_mbuf *mem_split_frag(struct dpl_mbuf **om, uint16_t max_frag_sz,
+struct dpl_mbuf *dpl_mem_split_frag(struct dpl_mbuf **om, uint16_t max_frag_sz,
                                mem_frag_alloc_fn *alloc_cb, void *cb_arg);
 
 #ifdef __cplusplus

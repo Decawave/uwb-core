@@ -53,7 +53,7 @@ dpl_msys_init_once(void *data, struct dpl_mempool *mempool,
 {
     int rc;
 
-    rc = mem_init_mbuf_pool(data, mempool, mbuf_pool, block_count, block_size,
+    rc = dpl_mem_init_mbuf_pool(data, mempool, mbuf_pool, block_count, block_size,
                             name);
     assert(rc == 0);
 

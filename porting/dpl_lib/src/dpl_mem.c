@@ -29,7 +29,7 @@
  * Generic mempool allocation function.  Used with basic and extended mempools.
  */
 static int
-mem_malloc_mempool_gen(uint16_t num_blocks, uint32_t block_size,
+dpl_mem_malloc_mempool_gen(uint16_t num_blocks, uint32_t block_size,
                        void **out_buf)
 {
     block_size = DPL_ALIGN(block_size, DPL_ALIGNMENT);
@@ -63,13 +63,13 @@ mem_malloc_mempool_gen(uint16_t num_blocks, uint32_t block_size,
  *                              Other OS code on unexpected error.
  */
 int
-mem_malloc_mempool(struct dpl_mempool *mempool, uint16_t num_blocks,
+dpl_mem_malloc_mempool(struct dpl_mempool *mempool, uint16_t num_blocks,
                    uint32_t block_size, char *name, void **out_buf)
 {
     void *buf;
     int rc;
 
-    rc = mem_malloc_mempool_gen(num_blocks, block_size, &buf);
+    rc = dpl_mem_malloc_mempool_gen(num_blocks, block_size, &buf);
     if (rc != 0) {
         return rc;
     }
@@ -104,13 +104,13 @@ mem_malloc_mempool(struct dpl_mempool *mempool, uint16_t num_blocks,
  *                              Other OS code on unexpected error.
  */
 int
-mem_malloc_mempool_ext(struct dpl_mempool_ext *mpe, uint16_t num_blocks,
+dpl_mem_malloc_mempool_ext(struct dpl_mempool_ext *mpe, uint16_t num_blocks,
                        uint32_t block_size, char *name, void **out_buf)
 {
     void *buf;
     int rc;
 
-    rc = mem_malloc_mempool_gen(num_blocks, block_size, &buf);
+    rc = dpl_mem_malloc_mempool_gen(num_blocks, block_size, &buf);
     if (rc != 0) {
         return rc;
     }
@@ -147,7 +147,7 @@ mem_malloc_mempool_ext(struct dpl_mempool_ext *mpe, uint16_t num_blocks,
  *                              Other OS code on unexpected error.
  */
 int
-mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
+dpl_mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
                      struct dpl_mbuf_pool *mbuf_pool, uint16_t num_blocks,
                      uint32_t block_size, char *name,
                      void **out_buf)
@@ -157,7 +157,7 @@ mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
 
     block_size = DPL_ALIGN(block_size + sizeof (struct dpl_mbuf), DPL_ALIGNMENT);
 
-    rc = mem_malloc_mempool(mempool, num_blocks, block_size, name, &buf);
+    rc = dpl_mem_malloc_mempool(mempool, num_blocks, block_size, name, &buf);
     if (rc != 0) {
         return rc;
     }
@@ -194,21 +194,21 @@ mem_malloc_mbuf_pool(struct dpl_mempool *mempool,
  *                              Other OS code on unexpected error.
  */
 int
-mem_malloc_mbufpkt_pool(struct dpl_mempool *mempool,
+dpl_mem_malloc_mbufpkt_pool(struct dpl_mempool *mempool,
                         struct dpl_mbuf_pool *mbuf_pool, int num_blocks,
                         int block_size, char *name,
                         void **out_buf)
 {
     int rc;
 
-    rc = mem_malloc_mbuf_pool(mempool, mbuf_pool, num_blocks,
+    rc = dpl_mem_malloc_mbuf_pool(mempool, mbuf_pool, num_blocks,
                               block_size + sizeof (struct dpl_mbuf_pkthdr),
                               name, out_buf);
     return rc;
 }
 
 int
-mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
+dpl_mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
                    struct dpl_mbuf_pool *mbuf_pool, int num_blocks,
                    int block_size, char *name)
 {
@@ -269,7 +269,7 @@ mem_init_mbuf_pool(void *mem, struct dpl_mempool *mempool,
  *                              NULL on failure.
  */
 struct dpl_mbuf *
-mem_split_frag(struct dpl_mbuf **om, uint16_t max_frag_sz,
+dpl_mem_split_frag(struct dpl_mbuf **om, uint16_t max_frag_sz,
                mem_frag_alloc_fn *alloc_cb, void *cb_arg)
 {
     struct dpl_mbuf *frag;

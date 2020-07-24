@@ -27,6 +27,8 @@ pkg.keywords:
 
 pkg.deps:
     - "@decawave-uwb-core/hw/drivers/uwb"
+
+pkg.deps.UWB_CCP_VERBOSE:
     - "@decawave-uwb-core/lib/json"
 
 pkg.cflags:

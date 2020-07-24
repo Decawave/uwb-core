@@ -33,7 +33,10 @@ pkg.cflags:
 pkg.deps:
     - "@decawave-uwb-core/hw/drivers/uwb"
     - "@decawave-uwb-core/lib/uwb_ccp"
+
+pkg.deps.UWB_WCS_VERBOSE:
     - "@decawave-uwb-core/lib/json"
+
 pkg.deps.TIMESCALE:
     - "@mynewt-timescale-lib/lib/timescale"
 

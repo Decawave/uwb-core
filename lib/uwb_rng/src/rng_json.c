@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+
+#if MYNEWT_VAL(RNG_VERBOSE)
 #include <uwb_rng/rng_json.h>
 
 static int rng_write_line(void *buf, char* data, int len);
@@ -298,4 +300,5 @@ rng_json_read(rng_json_t * json, char * line){
 
     return rc;
 }
+#endif
 #endif

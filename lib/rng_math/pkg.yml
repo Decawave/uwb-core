@@ -29,7 +29,6 @@ pkg.keywords:
 pkg.deps:
     - "@decawave-uwb-core/lib/euclid"
     - "@decawave-uwb-core/porting/dpl/mynewt"
-    - "@decawave-uwb-core/porting/dpl_lib"
 
 pkg.deps.SELFTEST:
     - "@decawave-uwb-core/lib/uwb_softfloat"

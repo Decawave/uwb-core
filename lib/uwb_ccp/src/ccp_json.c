@@ -28,8 +28,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
-#include <uwb_ccp/ccp_json.h>
 
+#if MYNEWT_VAL(CCP_VERBOSE)
+#include <uwb_ccp/ccp_json.h>
 
 static int ccp_write_line(void *buf, char* data, int len);
 
@@ -281,3 +282,4 @@ ccp_json_read_uint64(ccp_json_t * json, char * line){
 
     return rc;
 }
+#endif

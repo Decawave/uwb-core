@@ -42,7 +42,9 @@
 
 #include <uwb/uwb.h>
 #include <uwb/uwb_mac.h>
+#if MYNEWT_VAL(DW1000_BIAS_CORRECTION_ENABLED)
 #include <dsp/polyval.h>
+#endif
 
 #if MYNEWT_VAL(UWB_RNG_ENABLED)
 #include <uwb_rng/uwb_rng.h>
@@ -107,6 +109,7 @@ static bool tx_final_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs);
 static bool complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs);
 #endif
 
+#if MYNEWT_VAL(DW1000_BIAS_CORRECTION_ENABLED)
 #ifndef __KERNEL__
 /*
   % From APS011 Table 2
@@ -124,6 +127,7 @@ static float rng_bias_poly_PRF64[] ={
 static float rng_bias_poly_PRF16[] ={
     1.754924e-05, 4.106182e-03, 3.061584e-01, 7.189425e+00,
 };
+#endif
 #endif
 
 static struct uwb_rng_config g_config = {
@@ -646,6 +650,7 @@ uwb_rng_listen_delay_start(struct uwb_rng_instance * rng, uint64_t dx_time, uint
     return rng->dev_inst->status;
 }
 
+#if MYNEWT_VAL(DW1000_BIAS_CORRECTION_ENABLED)
 /**
  * @fn uwb_rng_bias_correction(struct uwb_dev * inst, float Pr)
  * @brief API for bias correction polynomial.
@@ -671,6 +676,7 @@ uwb_rng_bias_correction(struct uwb_dev * dev, float Pr){
     }
     return bias;
 }
+#endif
 #endif
 
 /**

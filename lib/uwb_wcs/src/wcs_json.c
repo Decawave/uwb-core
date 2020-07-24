@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+
+#if MYNEWT_VAL(WCS_VERBOSE)
 #include <uwb_wcs/wcs_json.h>
 
 static int wcs_write_line(void *buf, char* data, int len);
@@ -276,3 +278,4 @@ wcs_json_read_uint64(wcs_json_t * json, char * line){
 
     return rc;
 }
+#endif

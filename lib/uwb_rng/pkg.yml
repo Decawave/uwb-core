@@ -35,9 +35,13 @@ pkg.lflags:
 pkg.deps:
     - "@decawave-uwb-core/hw/drivers/uwb"
     - "@decawave-uwb-core/lib/rng_math"
-    - "@decawave-uwb-core/lib/json"
     - "@decawave-uwb-core/lib/euclid"
+
+pkg.deps.DW1000_BIAS_CORRECTION_ENABLED:
     - "@decawave-uwb-core/lib/dsp"
+
+pkg.deps.UWB_RNG_VERBOSE:
+    - "@decawave-uwb-core/lib/json"
 
 pkg.deps.SELFTEST:
     - "@apache-mynewt-core/sys/stats/stub"

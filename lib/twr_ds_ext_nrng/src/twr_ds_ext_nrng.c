@@ -44,7 +44,6 @@
 #include <uwb/uwb_ftypes.h>
 #include <nranges/nranges.h>
 #include <uwb_rng/uwb_rng.h>
-#include <dsp/polyval.h>
 
 //#define DIAGMSG(s,u) printf(s,u)
 #ifndef DIAGMSG

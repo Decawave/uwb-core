@@ -42,7 +42,6 @@
 #if MYNEWT_VAL(UWB_WCS_ENABLED)
 #include <uwb_wcs/uwb_wcs.h>
 #endif
-#include <dsp/polyval.h>
 #include <uwb_rng/slots.h>
 
 #define WCS_DTU MYNEWT_VAL(WCS_DTU)

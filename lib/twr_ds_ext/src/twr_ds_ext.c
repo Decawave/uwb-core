@@ -39,7 +39,6 @@
 #include <stats/stats.h>
 #include <uwb/uwb.h>
 #include <uwb_rng/uwb_rng.h>
-#include <dsp/polyval.h>
 
 //#define DIAGMSG(s,u) printf(s,u)
 #ifndef DIAGMSG

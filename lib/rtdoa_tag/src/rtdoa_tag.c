@@ -33,7 +33,6 @@
 #include <rtdoa/rtdoa.h>
 #include <rtdoa_tag/rtdoa_tag.h>
 #include <uwb_wcs/uwb_wcs.h>
-#include <dsp/polyval.h>
 #include <uwb_rng/slots.h>
 
 #define WCS_DTU MYNEWT_VAL(WCS_DTU)

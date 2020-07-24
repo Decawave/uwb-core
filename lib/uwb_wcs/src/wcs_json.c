@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+#include <syscfg/syscfg.h>
 
 #if MYNEWT_VAL(WCS_VERBOSE)
 #include <uwb_wcs/wcs_json.h>

@@ -39,7 +39,6 @@
 #include <stats/stats.h>
 #include <uwb/uwb.h>
 #include <uwb_rng/uwb_rng.h>
-#include <dsp/polyval.h>
 #if MYNEWT_VAL(UWB_WCS_ENABLED)
 #include <uwb_wcs/uwb_wcs.h>
 #endif

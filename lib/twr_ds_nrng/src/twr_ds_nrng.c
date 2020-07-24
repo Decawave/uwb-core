@@ -42,7 +42,6 @@
 #include <dw1000/dw1000_phy.h>
 #include <uwb/uwb_ftypes.h>
 #include <nranges/nranges.h>
-#include <dsp/polyval.h>
 
 //#define DIAGMSG(s,u) printf(s,u)
 #ifndef DIAGMSG

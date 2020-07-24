@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+#include <syscfg/syscfg.h>
 
 #if MYNEWT_VAL(CCP_VERBOSE)
 #include <uwb_ccp/ccp_json.h>

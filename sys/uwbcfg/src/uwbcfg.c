@@ -149,7 +149,7 @@ uwbcfg_set(int argc, char **argv, char *val)
                 return CONF_VALUE_SET(val, CONF_STRING, g_uwb_config[i]);
         }
     }
-    return OS_ENOENT;
+    return DPL_ENOENT;
 }
 
 char*

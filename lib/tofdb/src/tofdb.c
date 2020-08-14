@@ -28,7 +28,7 @@ int tofdb_get_tof(uint16_t addr, uint32_t *tof)
             goto ret;
         }
     }
-    return OS_ENOENT;
+    return DPL_ENOENT;
 ret:
     return OS_OK;
 }

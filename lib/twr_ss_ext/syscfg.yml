@@ -10,3 +10,6 @@ syscfg.defs:
       TWR_SS_EXT_RX_TIMEOUT:
         description: 'TOA timeout delay for SS EXT TWR (usec)'
         value: ((uint16_t)0x40)
+      TWR_SS_EXT_STATS:
+        description: 'Enable statistics for the twr_ss_ext module'
+        value: 1

@@ -78,7 +78,7 @@ static struct uwb_mac_interface g_cbs[] = {
 #endif
 };
 
-
+#if MYNEWT_VAL(TWR_SS_ACK_STATS)
 STATS_SECT_START(twr_ss_ack_stat_section)
     STATS_SECT_ENTRY(complete)
     STATS_SECT_ENTRY(tx_error)
@@ -97,7 +97,9 @@ STATS_NAME_END(twr_ss_ack_stat_section)
 
 STATS_SECT_DECL(twr_ss_ack_stat_section) g_twr_ss_ack_stat;
 #define SS_STATS_INC(__X) STATS_INC(g_twr_ss_ack_stat, __X)
-
+#else
+#define SS_STATS_INC(__X) {}
+#endif
 
 static struct uwb_rng_config g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(TWR_SS_ACK_TX_HOLDOFF),       // Send Time delay in usec.
@@ -154,6 +156,7 @@ twr_ss_ack_pkg_init(void)
         uwb_rng_append_config(g_cbs[i].inst_ptr, &g_rng_cfgs[i]);
     }
 
+#if MYNEWT_VAL(TWR_SS_ACK_STATS)
     rc = stats_init(
         STATS_HDR(g_twr_ss_ack_stat),
         STATS_SIZE_INIT_PARMS(g_twr_ss_ack_stat, STATS_SIZE_32),
@@ -162,6 +165,7 @@ twr_ss_ack_pkg_init(void)
 
     rc |= stats_register("twr_ss_ack", STATS_HDR(g_twr_ss_ack_stat));
     assert(rc == 0);
+#endif
 }
 
 /**

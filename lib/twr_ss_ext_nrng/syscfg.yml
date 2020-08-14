@@ -12,6 +12,9 @@ syscfg.defs:
         value: ((uint16_t)0x10)
       TWR_SS_EXT_NRNG_TX_GUARD_DELAY:
         value: ((uint32_t)0x90)
+      TWR_SS_EXT_NRNG_STATS:
+        description: 'Enable statistics for the twr_ss_ext_nrng module'
+        value: 1
       CELL_ENABLED:
         description: 'Cell network model on slot decoding'
         value: 0

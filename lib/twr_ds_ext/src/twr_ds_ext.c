@@ -67,6 +67,7 @@ static struct uwb_mac_interface g_cbs[] = {
 #endif
 };
 
+#if MYNEWT_VAL(TWR_DS_EXT_STATS)
 STATS_SECT_START(twr_ds_ext_stat_section)
     STATS_SECT_ENTRY(complete)
     STATS_SECT_ENTRY(tx_error)
@@ -78,6 +79,10 @@ STATS_NAME_START(twr_ds_ext_stat_section)
 STATS_NAME_END(twr_ds_ext_stat_section)
 
 static STATS_SECT_DECL(twr_ds_ext_stat_section) g_twr_ds_ext_stat;
+#define DS_STATS_INC(__X) STATS_INC(g_twr_ds_ext_stat, __X)
+#else
+#define DS_STATS_INC(__X) {}
+#endif
 
 static struct uwb_rng_config g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(TWR_DS_EXT_TX_HOLDOFF),         // Send Time delay in usec.
@@ -132,6 +137,7 @@ void twr_ds_ext_pkg_init(void)
         uwb_rng_append_config(g_cbs[i].inst_ptr, &g_rng_cfgs[i]);
     }
 
+#if MYNEWT_VAL(TWR_DS_EXT_STATS)
     rc = stats_init(
         STATS_HDR(g_twr_ds_ext_stat),
         STATS_SIZE_INIT_PARMS(g_twr_ds_ext_stat, STATS_SIZE_32),
@@ -140,6 +146,7 @@ void twr_ds_ext_pkg_init(void)
 
     rc = stats_register("twr_ds_ext", STATS_HDR(g_twr_ds_ext_stat));
     assert(rc == 0);
+#endif
 }
 
 
@@ -224,7 +231,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_set_rxauto_disable(inst, true);
 
                 if (uwb_start_tx(inst).start_tx_error){
-                    STATS_INC(g_twr_ds_ext_stat, tx_error);
+                    DS_STATS_INC(tx_error);
                     dpl_sem_release(&rng->sem);
                 }
 
@@ -293,7 +300,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_set_rxauto_disable(inst, true);
 
                 if (uwb_start_tx(inst).start_tx_error){
-                    STATS_INC(g_twr_ds_ext_stat, tx_error);
+                    DS_STATS_INC(tx_error);
                     dpl_sem_release(&rng->sem);
                 }
                 /* Setup when to listen for response, relative the end of our transmitted frame */
@@ -348,11 +355,11 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_rng_clear_twr_data(&frame->remote);
 
                 if (uwb_start_tx(inst).start_tx_error) {
-                    STATS_INC(g_twr_ds_ext_stat, tx_error);
+                    DS_STATS_INC(tx_error);
                     dpl_sem_release(&rng->sem);
                     rng_issue_complete(inst);
                 }else{
-                    STATS_INC(g_twr_ds_ext_stat, complete);
+                    DS_STATS_INC(complete);
                     rng->control.complete_after_tx = 1;
                 }
                 break;
@@ -362,7 +369,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 // This code executes on the device that initialed the original request, and has now receive the final response timestamp.
                 // This marks the completion of the double-single-two-way request.
 
-                STATS_INC(g_twr_ds_ext_stat, complete);
+                DS_STATS_INC(complete);
                 dpl_sem_release(&rng->sem);
                 rng_issue_complete(inst);
                 break;

@@ -10,3 +10,6 @@ syscfg.defs:
       TWR_DS_EXT_RX_TIMEOUT:
         description: 'TOA timeout delay for DS TWR extended frame (usec)'
         value: ((uint16_t)0x40)
+      TWR_DS_EXT_STATS:
+        description: 'Enable statistics for the twr_ds_ext module'
+        value: 1

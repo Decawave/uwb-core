@@ -10,3 +10,6 @@ syscfg.defs:
       TWR_SS_ACK_RX_TIMEOUT:
         description: 'TOA timeout delay for SS TWR (usec)'
         value: ((uint16_t)0x100)
+      TWR_SS_ACK_STATS:
+        description: 'Enable statistics for the twr_ss_ack module'
+        value: 1

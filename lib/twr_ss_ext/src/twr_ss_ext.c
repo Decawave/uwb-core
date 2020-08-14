@@ -74,6 +74,7 @@ static struct uwb_mac_interface g_cbs[] = {
 #endif
 };
 
+#if MYNEWT_VAL(TWR_SS_EXT_STATS)
 STATS_SECT_START(twr_ss_ext_stat_section)
     STATS_SECT_ENTRY(complete)
     STATS_SECT_ENTRY(tx_error)
@@ -85,6 +86,10 @@ STATS_NAME_START(twr_ss_ext_stat_section)
 STATS_NAME_END(twr_ss_ext_stat_section)
 
 static STATS_SECT_DECL(twr_ss_ext_stat_section) g_twr_ss_ext_stat;
+#define SS_STATS_INC(__X) STATS_INC(g_twr_ss_ext_stat, __X)
+#else
+#define SS_STATS_INC(__X) {}
+#endif
 
 static struct uwb_rng_config g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(TWR_SS_EXT_TX_HOLDOFF),         // Send Time delay in usec.
@@ -140,12 +145,14 @@ twr_ss_ext_pkg_init(void)
         uwb_rng_append_config(g_cbs[i].inst_ptr, &g_rng_cfgs[i]);
     }
 
+#if MYNEWT_VAL(TWR_SS_EXT_STATS)
     rc = stats_init(
         STATS_HDR(g_twr_ss_ext_stat),
         STATS_SIZE_INIT_PARMS(g_twr_ss_ext_stat, STATS_SIZE_32),
         STATS_NAME_INIT_PARMS(twr_ss_ext_stat_section));
     rc |= stats_register("twr_ss_ext", STATS_HDR(g_twr_ss_ext_stat));
     assert(rc == 0);
+#endif
 }
 
 /**
@@ -241,7 +248,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_set_delay_start(inst, txd.response_tx_delay);
 
                 if (uwb_start_tx(inst).start_tx_error){
-                    STATS_INC(g_twr_ss_ext_stat, tx_error);
+                    SS_STATS_INC(tx_error);
                     dpl_sem_release(&rng->sem);
                 }
                 /* Setup when to listen for response, relative the end of our transmitted frame */
@@ -284,12 +291,12 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 uwb_set_delay_start(inst, txd.response_tx_delay);
 
                 if (uwb_start_tx(inst).start_tx_error){
-                    STATS_INC(g_twr_ss_ext_stat, tx_error);
+                    SS_STATS_INC(tx_error);
                     dpl_sem_release(&rng->sem);
                     rng_issue_complete(inst);
                 }
                 else{
-                    STATS_INC(g_twr_ss_ext_stat, complete);
+                    SS_STATS_INC(complete);
                     rng->control.complete_after_tx = 1;
                 }
                 break;
@@ -301,7 +308,7 @@ rx_complete_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs)
                 if (inst->frame_len != sizeof(twr_frame_final_t))
                    break;
 
-                STATS_INC(g_twr_ss_ext_stat, complete);
+                SS_STATS_INC(complete);
                 dpl_sem_release(&rng->sem);
                 rng_issue_complete(inst);
                 break;

@@ -67,6 +67,7 @@ static struct uwb_mac_interface g_cbs = {
             .final_cb = tx_final_cb,
 };
 
+#if MYNEWT_VAL(TWR_SS_EXT_NRNG_STATS)
 STATS_SECT_START(twr_ss_ext_nrng_stat_section)
     STATS_SECT_ENTRY(complete)
     STATS_SECT_ENTRY(rx_error)
@@ -80,6 +81,10 @@ STATS_NAME_START(twr_ss_ext_nrng_stat_section)
 STATS_NAME_END(twr_ss_ext_nrng_stat_section)
 
 static STATS_SECT_DECL(twr_ss_ext_nrng_stat_section) g_stat;
+#define SS_STATS_INC(__X) STATS_INC(g_stat, __X)
+#else
+#define SS_STATS_INC(__X) {}
+#endif
 
 static struct uwb_rng_config g_config = {
     .tx_holdoff_delay = MYNEWT_VAL(TWR_SS_EXT_NRNG_TX_HOLDOFF),         // Send Time delay in usec.
@@ -107,12 +112,14 @@ void twr_ss_ext_nrng_pkg_init(void)
     uwb_mac_append_interface(uwb_dev_idx_lookup(0), &g_cbs);
     nrng_append_config(nrng, &g_rng_cfgs);
 
+#if MYNEWT_VAL(TWR_SS_EXT_NRNG_STATS)
     int rc = stats_init(
     STATS_HDR(g_stat),
     STATS_SIZE_INIT_PARMS(g_stat, STATS_SIZE_32),
     STATS_NAME_INIT_PARMS(twr_ss_ext_nrng_stat_section));
     rc |= stats_register("ss_ext_nrng", STATS_HDR(g_stat));
     assert(rc == 0);
+#endif
 }
 
 /**
@@ -144,7 +151,7 @@ rx_error_cb(struct uwb_dev * inst, struct uwb_mac_interface * cbs){
     }
     struct uwb_rng_instance * rng = inst->rng;
     if(os_sem_get_count(&rng->sem) == 0){
-        STATS_INC(g_stat, rx_error);
+        SS_STATS_INC(rx_error);
         os_error_t err = os_sem_release(&rng->sem);
         assert(err == OS_OK);
         return true;

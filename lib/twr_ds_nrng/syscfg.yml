@@ -12,3 +12,6 @@ syscfg.defs:
         value: ((uint16_t)0x10)
       TWR_DS_NRNG_TX_GUARD_DELAY:
         value: ((uint16_t)0x100)
+      TWR_DS_NRNG_STATS:
+        description: 'Enable statistics for the twr_ds_nrng module'
+        value: 1

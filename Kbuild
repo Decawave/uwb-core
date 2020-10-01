@@ -297,5 +297,3 @@ obj-$(CONFIG_UWB_TP_TEST)	+= apps/uwb_tp_test/
 # Separate module Tdoa Tag test
 obj-$(CONFIG_UWB_TDOA_SYNC_TAG)	+= apps/tdoa_sync_tag/
 
-# Separate module Desense RF Test
-obj-$(CONFIG_UWB_DESENSE)	+= apps/uwb_desense/

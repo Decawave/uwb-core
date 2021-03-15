@@ -17,17 +17,20 @@
 # under the License.
 #
 
-pkg.name: lib/nmgr_uwb
-pkg.description: UWB Transport Layer for NewtMgr
+pkg.name: lib/smp_cmds
+pkg.description: TWR library superset
 pkg.author: "UWB Core <uwbcore@gmail.com>"
 pkg.homepage: "http://www.decawave.com/"
 pkg.keywords:
-    - uwb
-    - nmgr
+    - dw1000
+    - CCP
 
 pkg.cflags:
     - "-std=gnu99"
     - "-fms-extensions"
+
+pkg.lflags:
+    - "-lm"
 
 pkg.deps:
     - "@apache-mynewt-core/kernel/os"
@@ -35,4 +38,4 @@ pkg.deps:
     - "@apache-mynewt-core/mgmt/newtmgr"
 
 pkg.init:
-    nmgr_uwb_pkg_init: 410
+    smp_cmds_pkg_init: 411

@@ -52,8 +52,8 @@ typedef enum uwb_extension_id {
     UWBEXT_LWIP,                             //!< LWIP
     UWBEXT_PAN,                              //!< Personal area network
     UWBEXT_PROVISION,                        //!< Provisioning
-    UWBEXT_NMGR_UWB,                         //!< UWB transport layer
-    UWBEXT_NMGR_CMD,                         //!< UWB command support
+    UWBEXT_SMP_UWB,                          //!< UWB transport layer
+    UWBEXT_SMP_CMD,                          //!< UWB command support
     UWBEXT_CIR,                              //!< Channel impulse response
     UWBEXT_OT = 0x30,                        //!< Openthread
     UWBEXT_RTDOA = 0x40,                     //!< RTDoA

@@ -51,22 +51,22 @@ static int bota_upload(struct mgmt_cbuf *);
 static int bota_confirm(struct mgmt_cbuf *);
 static new_fw_cb *_new_image_cb;
 
-static const struct mgmt_handler bota_nmgr_handlers[] = {
-    [IMGMGR_NMGR_ID_UPLOAD] = {
+static const struct mgmt_handler bota_smp_handlers[] = {
+    [IMGMGR_SMP_ID_UPLOAD] = {
         .mh_read = NULL,
         .mh_write = bota_upload
     },
-    [IMGMGR_NMGR_ID_STATE] = {
+    [IMGMGR_SMP_ID_STATE] = {
         .mh_read = NULL,
         .mh_write = bota_confirm
     }
 };
 
 #define BOTA_HANDLER_CNT                                                \
-    sizeof(bota_nmgr_handlers) / sizeof(bota_nmgr_handlers[0])
+    sizeof(bota_smp_handlers) / sizeof(bota_smp_handlers[0])
 
-static struct mgmt_group bota_nmgr_group = {
-    .mg_handlers = (struct mgmt_handler *)bota_nmgr_handlers,
+static struct mgmt_group bota_smp_group = {
+    .mg_handlers = (struct mgmt_handler *)bota_smp_handlers,
     .mg_handlers_count = BOTA_HANDLER_CNT,
     .mg_group_id = MGMT_GROUP_ID_BOTA,
 };
@@ -388,14 +388,14 @@ bcast_ota_set_new_fw_cb(new_fw_cb *cb)
 }
 
 void
-bcast_ota_nmgr_module_init(void)
+bcast_ota_smp_module_init(void)
 {
     int rc;
 
     /* Ensure this function only gets called by sysinit. */
     SYSINIT_ASSERT_ACTIVE();
 
-    rc = mgmt_group_register(&bota_nmgr_group);
+    rc = mgmt_group_register(&bota_smp_group);
     SYSINIT_PANIC_ASSERT(rc == 0);
 
 #if MYNEWT_VAL(BCAST_OTA_REBOOT_ON_NEW_IMAGE)

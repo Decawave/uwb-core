@@ -41,7 +41,7 @@ static struct dpl_event conf_ev_load = {
 };
 #endif
 
-int __attribute__((weak)) conf_nmgr_register(void) { return 0; }
+int __attribute__((weak)) conf_smp_register(void) { return 0; }
 
 void
 conf_init(void)
@@ -59,8 +59,8 @@ conf_init(void)
     rc = conf_cli_register();
     assert(rc == 0);
 #endif
-#if MYNEWT_VAL(CONFIG_NEWTMGR)
-    rc = conf_nmgr_register();
+#if MYNEWT_VAL(CONFIG_SMP)
+    rc = conf_smp_register();
     assert(rc == 0);
 #endif
 

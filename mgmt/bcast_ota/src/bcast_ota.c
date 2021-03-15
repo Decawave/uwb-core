@@ -18,7 +18,7 @@
 #include <cborattr/cborattr.h>
 #include "base64/hex.h"
 
-#include <nmgr_os/nmgr_os.h>
+#include <smp_os/smp_os.h>
 #include <mgmt/mgmt.h>
 #include <newtmgr/newtmgr.h>
 #include <imgmgr/imgmgr.h>
@@ -33,14 +33,14 @@ static struct os_mbuf_pool *g_mbuf_pool=0;
 #define CBOR_OVERHEAD    (36)
 
 static struct os_mbuf*
-buf_to_bota_nmgr_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size,
+buf_to_bota_smp_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size,
                       uint64_t src_slot, uint64_t dst_slot, uint64_t flags)
 {
     int rc;
     CborEncoder payload_enc;
     struct mgmt_cbuf n_b;
     struct cbor_mbuf_writer writer;
-    struct nmgr_hdr *hdr;
+    struct smp_hdr *hdr;
     struct os_mbuf *rsp;
 
     if (g_mbuf_pool) {
@@ -54,17 +54,17 @@ buf_to_bota_nmgr_mbuf(uint8_t *buf, uint64_t len, uint64_t off, uint32_t size,
         return 0;
     }
 
-    hdr = (struct nmgr_hdr *) os_mbuf_extend(rsp, sizeof(struct nmgr_hdr));
+    hdr = (struct smp_hdr *) os_mbuf_extend(rsp, sizeof(struct smp_hdr));
     if (!hdr) {
         BOTA_ERR("could not get hdr\n");
         goto exit_err;
     }
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_WRITE;
+    hdr->nh_op = SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_BOTA);
     hdr->nh_seq = 0;
-    hdr->nh_id = IMGMGR_NMGR_ID_UPLOAD;
+    hdr->nh_id = IMGMGR_SMP_ID_UPLOAD;
 
     cbor_mbuf_writer_init(&writer, rsp);
     cbor_encoder_init(&n_b.encoder, &writer.enc, 0);
@@ -150,7 +150,7 @@ bcast_ota_get_packet(int src_slot, bcast_ota_mode_t mode, int max_transfer_unit,
         rc = flash_area_read(s_fa, off, buf, len);
 
         BOTA_DEBUG("Reading flash at %lX, %d bytes rc=%d\n", off, len, rc);
-        *rsp = buf_to_bota_nmgr_mbuf(buf, len, off, s_fa->fa_size, src_slot, 1, flags);
+        *rsp = buf_to_bota_smp_mbuf(buf, len, off, s_fa->fa_size, src_slot, 1, flags);
 
         if (*rsp == 0) {
             BOTA_ERR("Could not convert flash data to mbuf\n");
@@ -172,7 +172,7 @@ exit_err:
 struct os_mbuf*
 bcast_ota_get_reset_mbuf(void)
 {
-    struct nmgr_hdr *hdr;
+    struct smp_hdr *hdr;
     struct os_mbuf *rsp;
 
     if (g_mbuf_pool) {
@@ -186,17 +186,17 @@ bcast_ota_get_reset_mbuf(void)
         return 0;
     }
 
-    hdr = (struct nmgr_hdr *) os_mbuf_extend(rsp, sizeof(struct nmgr_hdr));
+    hdr = (struct smp_hdr *) os_mbuf_extend(rsp, sizeof(struct smp_hdr));
     if (!hdr) {
         BOTA_ERR("could not get hdr\n");
         goto exit_err;
     }
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_WRITE;
+    hdr->nh_op = SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_DEFAULT);
     hdr->nh_seq = 0;
-    hdr->nh_id = NMGR_ID_RESET;
+    hdr->nh_id = SMP_ID_RESET;
     return rsp;
 
 exit_err:
@@ -223,7 +223,7 @@ bcast_ota_pkg_init(void)
                  NULL, LOG_SYSLEVEL);
 
 
-    bcast_ota_nmgr_module_init();
+    bcast_ota_smp_module_init();
 
 #if MYNEWT_VAL(BCAST_OTA_CLI)
     int rc;

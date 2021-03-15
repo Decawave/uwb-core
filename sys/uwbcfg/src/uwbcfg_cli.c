@@ -42,27 +42,27 @@
 #include <tinycbor/cbor_mbuf_reader.h>
 #include <cborattr/cborattr.h>
 
-#include <nmgr_os/nmgr_os.h>
+#include <smp_os/smp_os.h>
 #include <mgmt/mgmt.h>
 #include <newtmgr/newtmgr.h>
 
 #if MYNEWT_VAL(UWB_DEVICE_0)
 #include <uwb/uwb.h>
-#if MYNEWT_VAL(NMGR_UWB_ENABLED)
-#include <nmgr_uwb/nmgr_uwb.h>
+#if MYNEWT_VAL(SMP_UWB_ENABLED)
+#include <smp_uwb/smp_uwb.h>
 #endif
 #endif
 
-static struct nmgr_transport nmgr_mstr_transport;
+static struct smp_transport smp_mstr_transport;
 static struct streamer *delayed_resp_streamer = 0;
 static uint16_t
-nmgr_mstr_get_mtu(struct os_mbuf *m)
+smp_mstr_get_mtu(struct os_mbuf *m)
 {
     return 196;
 }
 
 static int
-nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
+smp_mstr_out(struct smp_transport *nt, struct os_mbuf *req)
 {
     int rc;
     int64_t rc_attr;
@@ -82,7 +82,7 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
         }
     };
     rc = 0;
-    cbor_mbuf_reader_init(&reader, req, sizeof(struct nmgr_hdr));
+    cbor_mbuf_reader_init(&reader, req, sizeof(struct smp_hdr));
     cbor_parser_init(&reader.r, 0, &n_b.parser, &n_b.it);
 
     struct mgmt_cbuf *cb = &n_b;
@@ -92,7 +92,7 @@ nmgr_mstr_out(struct nmgr_transport *nt, struct os_mbuf *req)
         streamer_printf(delayed_resp_streamer, "gerr: '%d\n", g_err);
     }
     if (delayed_resp_streamer) {
-        streamer_printf(delayed_resp_streamer, "nmgr_out: rc=%d\n", (int)(rc_attr&0xffffffff));
+        streamer_printf(delayed_resp_streamer, "smp_out: rc=%d\n", (int)(rc_attr&0xffffffff));
     }
 
 #if 0
@@ -136,7 +136,7 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr, struct streamer *streamer)
     CborEncoder payload_enc;
     struct mgmt_cbuf n_b;
     struct cbor_mbuf_writer writer;
-    struct nmgr_hdr *hdr;
+    struct smp_hdr *hdr;
     struct os_mbuf *rsp;
     bool do_save = (fields!=0x0);
     int num_fields = 0;
@@ -148,13 +148,13 @@ get_txcfg_mbuf(uint32_t fields, char *cfgstr, struct streamer *streamer)
         return 0;
     }
 
-    hdr = (struct nmgr_hdr *) os_mbuf_extend(rsp, sizeof(struct nmgr_hdr));
+    hdr = (struct smp_hdr *) os_mbuf_extend(rsp, sizeof(struct smp_hdr));
     if (!hdr) {
         goto exit_err;
     }
     hdr->nh_len = 0;
     hdr->nh_flags = 0;
-    hdr->nh_op = NMGR_OP_WRITE;
+    hdr->nh_op = SMP_OP_WRITE;
     hdr->nh_group = htons(MGMT_GROUP_ID_UWBCFG);
     hdr->nh_seq = 0;
     hdr->nh_id = 0;
@@ -270,9 +270,9 @@ uwbcfg_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct stream
         streamer_printf(streamer, sending, addr);
         struct os_mbuf *om = get_txcfg_mbuf(fields, 0, streamer);
         if (!om) return 0;
-        nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_NMGR_UWB);
+        smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_SMP_UWB);
         delayed_resp_streamer = streamer;
-        uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        uwb_smp_queue_tx(smpuwb, addr, UWB_DATA_CODE_SMP_REQUEST, om);
         os_time_delay(OS_TICKS_PER_SEC/2);
         delayed_resp_streamer = streamer_console_get();
     } else if(!strcmp(argv[1], "txcfg")) {
@@ -286,9 +286,9 @@ uwbcfg_cli_cmd(const struct shell_cmd *cmd, int argc, char **argv, struct stream
         streamer_printf(streamer, sending, addr);
         struct os_mbuf *om = get_txcfg_mbuf(0, argv[3], streamer);
         if (!om) return 0;
-        nmgr_uwb_instance_t *nmgruwb = (nmgr_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_NMGR_UWB);
+        smp_uwb_instance_t *smpuwb = (smp_uwb_instance_t*)uwb_mac_find_cb_inst_ptr(udev, UWBEXT_SMP_UWB);
         delayed_resp_streamer = streamer;
-        uwb_nmgr_queue_tx(nmgruwb, addr, UWB_DATA_CODE_NMGR_REQUEST, om);
+        uwb_smp_queue_tx(smpuwb, addr, UWB_DATA_CODE_SMP_REQUEST, om);
         os_time_delay(OS_TICKS_PER_SEC/2);
         delayed_resp_streamer = streamer_console_get();
 
@@ -302,8 +302,8 @@ int
 uwbcfg_cli_register(void)
 {
     int rc;
-    rc = nmgr_transport_init(&nmgr_mstr_transport, nmgr_mstr_out,
-                             nmgr_mstr_get_mtu);
+    rc = smp_transport_init(&smp_mstr_transport, smp_mstr_out,
+                             smp_mstr_get_mtu);
     assert(rc == 0);
 
     return shell_cmd_register(&shell_uwbcfg_cmd);

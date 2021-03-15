@@ -2,7 +2,7 @@ syscfg.defs:
     UWBCFG_ENABLED:
         description: 'UWB Configuration manager enabled'
         value: 1
-    UWBCFG_NMGR:
+    UWBCFG_SMP:
         description: 'Enable Newtmgr interface'
         value: 0
     UWBCFG_CLI:

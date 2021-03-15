@@ -27,30 +27,30 @@
  *
  */
 
-#ifndef _DW1000_NMGR_CMDS_H_
-#define _DW1000_NMGR_CMDS_H_
+#ifndef _DW1000_SMP_CMDS_H_
+#define _DW1000_SMP_CMDS_H_
 
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <mgmt/mgmt.h>
-#include <nmgr_uwb/nmgr_uwb.h>
+#include <smp_uwb/smp_uwb.h>
 
 typedef union{
-    struct _nmgr_uwb_frame_t{
-        struct _nmgr_uwb_header;
+    struct _smp_uwb_frame_t{
+        struct _smp_uwb_header;
         union _payload{
-            struct nmgr_hdr hdr;
-            uint8_t payload[NMGR_UWB_MTU_EXT];
+            struct smp_hdr hdr;
+            uint8_t payload[SMP_UWB_MTU_EXT];
         };
     }__attribute__((__packed__,aligned(1)));
-    uint8_t array[sizeof(struct _nmgr_uwb_frame_t)];
-}nmgr_uwb_frame_t;
+    uint8_t array[sizeof(struct _smp_uwb_frame_t)];
+}smp_uwb_frame_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct os_eventq* nmgr_cmds_get_eventq();
+struct os_eventq* smp_cmds_get_eventq();
 
 #ifdef __cplusplus
 }

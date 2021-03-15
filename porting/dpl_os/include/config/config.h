@@ -38,7 +38,7 @@ extern "C" {
 #define CONF_MAX_VAL_LEN	256
 #define CONF_NAME_SEPARATOR	"/"
 
-#define CONF_NMGR_OP		0
+#define CONF_SMP_OP		0
 
 /** @endcond */
 

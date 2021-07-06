@@ -45,3 +45,9 @@ pkg.deps.CIR_ENABLED:
 
 pkg.deps.BLE_LP_CLOCK:
     - "@apache-mynewt-nimble/nimble/drivers/nrf52"
+
+pkg.deps.LIS2DH12_ONB:
+    - "@apache-mynewt-core/hw/drivers/sensors/lis2dh12"
+
+pkg.init:
+    config_lis2dh12_sensor: 'MYNEWT_VAL(DWM1001_DEV_SYSINIT_STAGE_LIS2DH12)'

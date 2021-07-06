@@ -42,6 +42,31 @@
 #include "os/os_dev.h"
 #include "bsp/bsp.h"
 
+#if MYNEWT_VAL(LIS2DH12_ONB)
+#include "lis2dh12/lis2dh12.h"
+static struct lis2dh12 lis2dh12;
+#endif
+
+#if MYNEWT_VAL(LIS2DH12_ONB)
+static struct sensor_itf i2c_0_itf_lis = {
+    .si_type = SENSOR_ITF_I2C,
+    .si_num  = 0,
+    .si_addr = 0x19,
+    .si_ints = {
+        { /* TODO: determine correct values */
+            .host_pin = 25,
+            .device_pin = 0,
+            .active = true
+        },
+        { /* TODO: determine correct values */
+            .host_pin = 25,
+            .device_pin = 0,
+            .active = true
+        }
+    }
+};
+#endif
+
 #if MYNEWT_VAL(SPI_0_MASTER)
 struct dpl_sem g_spi0_sem;
 
@@ -129,6 +154,33 @@ hal_bsp_get_nvic_priority(int irq_num, uint32_t pri)
     return cfg_pri;
 }
 
+int
+config_lis2dh12_sensor(void)
+{
+#if MYNEWT_VAL(LIS2DH12_ONB)
+    int rc;
+    struct os_dev *dev;
+    struct lis2dh12_cfg cfg;
+
+    dev = (struct os_dev *) os_dev_open("lis2dh12_0", OS_TIMEOUT_NEVER, NULL);
+    assert(dev != NULL);
+
+
+    memset(&cfg, 0, sizeof(cfg));
+
+    cfg.lc_s_mask = SENSOR_TYPE_ACCELEROMETER;
+    cfg.lc_rate = LIS2DH12_DATA_RATE_HN_1344HZ_L_5376HZ;
+    cfg.lc_fs = LIS2DH12_FS_2G;
+    cfg.lc_pull_up_disc = 1;
+
+    rc = lis2dh12_config((struct lis2dh12 *)dev, &cfg);
+    SYSINIT_PANIC_ASSERT(rc == 0);
+
+    os_dev_close(dev);
+#endif
+    return 0;
+}
+
 
 void
 hal_bsp_init(void)
@@ -142,6 +194,13 @@ hal_bsp_init(void)
 
     /* Create all available nRF52832 peripherals */
     nrf52_periph_create();
+
+#if MYNEWT_VAL(LIS2DH12_ONB)
+    rc = os_dev_create((struct os_dev *) &lis2dh12, "lis2dh12_0",
+                       OS_DEV_INIT_PRIMARY, 0, lis2dh12_init,
+                       (void *)&i2c_0_itf_lis);
+    assert(rc == 0);
+#endif
 
 #if MYNEWT_VAL(SPI_0_MASTER)
     rc = dpl_sem_init(&g_spi0_sem, 0x1);

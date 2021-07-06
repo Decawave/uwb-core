@@ -58,6 +58,14 @@ syscfg.defs:
     DW1000_DEVICE_0_RX_ANT_DLY:
         description: 'RX_ANT_DLY'
         value: 0x4042
+    LIS2DH12_ONB:
+        description: 'Enable DWM1001 onboard LIS2DH12 sensor'
+        value:  0
+
+    DWM1001_DEV_SYSINIT_STAGE_LIS2DH12:
+        description: >
+            Sysinit stage for the DWM1001-dev; initializes the LIS2DH12 sensor.
+        value: 400
 
 syscfg.vals:
     MCU_TARGET: nRF52832
